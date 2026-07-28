@@ -1,0 +1,120 @@
+Expense Tracker - Database Design Plan
+========================================
+
+Database Name: expense_tracker
+
+NOTE: ENUM columns have been replaced with TINYINT for flexibility, maintainability,
+and consistency. All enum values are mapped to numeric constants in config/constants.php.
+
+Constants.php Mapping:
+   Transaction Type:      TRANSACTION_TYPE_INCOME = 1, TRANSACTION_TYPE_EXPENSE = 2
+   Category Type:         CATEGORY_TYPE_INCOME = 1, CATEGORY_TYPE_EXPENSE = 2
+   User Role:             ROLE_USER = 1, ROLE_ADMIN = 2
+   Recurring Frequency:   RECURRING_DAILY = 1, RECURRING_WEEKLY = 2, RECURRING_MONTHLY = 3, RECURRING_YEARLY = 4
+   Boolean Flags:         STATUS_ACTIVE = 1, STATUS_INACTIVE = 0 (for is_default, email_notifications, is_recurring)
+
+Tables:
+-------
+
+1. users
+   Purpose: Store user account information
+   Columns:
+   - id (INT, PK, AI)
+   - username (VARCHAR 50, Unique, Not Null)
+   - email (VARCHAR 100, Unique, Not Null)
+   - password (VARCHAR 255, Not Null)
+   - first_name (VARCHAR 50)
+   - last_name (VARCHAR 50)
+   - profile_picture (VARCHAR 255, Null)
+   - currency (VARCHAR 3, Default 'USD')
+   - date_format (VARCHAR 20, Default 'Y-m-d')
+   - email_notifications (TINYINT, Default 1)
+   - remember_token (VARCHAR 100, Null)
+    - email_verified_at (TIMESTAMP, Null)
+    - role (TINYINT, Default 1)  -- 1=user, 2=admin (use ROLE_USER, ROLE_ADMIN constants)
+    - created_at (TIMESTAMP, Default CURRENT_TIMESTAMP)
+    - updated_at (TIMESTAMP, Default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)
+
+2. categories
+   Purpose: Store income/expense categories
+   Columns:
+   - id (INT, PK, AI)
+   - user_id (INT, FK -> users.id, Null - for default categories)
+   - name (VARCHAR 50, Not Null)
+   - type (TINYINT, Not Null)  -- 1=income, 2=expense (use CATEGORY_TYPE_INCOME, CATEGORY_TYPE_EXPENSE constants)
+   - icon (VARCHAR 50, Null)
+   - color (VARCHAR 7, Default '#000000')
+   - is_default (TINYINT, Default 0)
+   - created_at (TIMESTAMP, Default CURRENT_TIMESTAMP)
+   - updated_at (TIMESTAMP, Default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)
+   Index: idx_user_type (user_id, type)
+
+3. transactions
+   Purpose: Store all income and expense transactions
+   Columns:
+   - id (INT, PK, AI)
+   - user_id (INT, FK -> users.id, Not Null)
+   - category_id (INT, FK -> categories.id, Not Null)
+   - type (TINYINT, Not Null)  -- 1=income, 2=expense (use TRANSACTION_TYPE_INCOME, TRANSACTION_TYPE_EXPENSE constants)
+   - amount (DECIMAL 10,2, Not Null)
+   - description (TEXT, Null)
+   - date (DATE, Not Null)
+   - receipt_image (VARCHAR 255, Null)
+   - is_recurring (TINYINT, Default 0)
+   - recurring_frequency (TINYINT, Null)  -- 1=daily, 2=weekly, 3=monthly, 4=yearly (use RECURRING_* constants)
+   - parent_transaction_id (INT, FK -> transactions.id, Null - for recurring)
+   - created_at (TIMESTAMP, Default CURRENT_TIMESTAMP)
+   - updated_at (TIMESTAMP, Default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)
+   Index: idx_user_date (user_id, date)
+   Index: idx_user_category (user_id, category_id)
+
+4. budgets
+   Purpose: Store monthly budget limits per category (Optional)
+   Columns:
+   - id (INT, PK, AI)
+   - user_id (INT, FK -> users.id, Not Null)
+   - category_id (INT, FK -> categories.id, Not Null)
+   - amount (DECIMAL 10,2, Not Null)
+   - month (DATE, Not Null - stores first day of month)
+   - created_at (TIMESTAMP, Default CURRENT_TIMESTAMP)
+   - updated_at (TIMESTAMP, Default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)
+   Unique: uk_user_category_month (user_id, category_id, month)
+
+5. settings
+   Purpose: Store application-wide settings
+   Columns:
+   - id (INT, PK, AI)
+   - user_id (INT, FK -> users.id, Not Null)
+   - key (VARCHAR 100, Not Null)
+   - value (TEXT, Null)
+   - created_at (TIMESTAMP, Default CURRENT_TIMESTAMP)
+   - updated_at (TIMESTAMP, Default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)
+   Unique: uk_user_key (user_id, key)
+
+6. password_resets
+   Purpose: Store password reset tokens
+   Columns:
+   - id (INT, PK, AI)
+   - email (VARCHAR 100, Not Null)
+   - token (VARCHAR 255, Not Null)
+   - created_at (TIMESTAMP, Default CURRENT_TIMESTAMP)
+
+Relationships:
+-------------
+- users hasMany categories (default + custom)
+- users hasMany transactions
+- users hasMany budgets
+- users hasMany settings
+- categories belongsTo users
+- categories hasMany transactions
+- transactions belongsTo users
+- transactions belongsTo categories
+- transactions belongsTo transactions (self-referencing for recurring)
+- budgets belongsTo users
+- budgets belongsTo categories
+
+Default Data:
+-------------
+- Default categories (user_id = NULL):
+  * Income: Salary, Freelance, Investment, Gift, Other Income
+  * Expense: Food, Transport, Housing, Utilities, Entertainment, Shopping, Healthcare, Education, Other Expense

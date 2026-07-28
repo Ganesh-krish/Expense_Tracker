@@ -1,0 +1,399 @@
+Expense Tracker - Module 8: Settings Module Plan
+==================================================
+
+Module Name: Settings
+File: plan_11_settings_module.txt
+
+---
+
+
+Overview
+--------
+Allows users to configure application preferences like currency, date format,
+email notifications, and data management options. Settings are user-specific
+and applied throughout the application.
+
+---
+
+
+Pages / Views
+-------------
+
+1. Settings Page
+   Path: views/users/settings.php
+   Shows: settings form with multiple sections
+
+---
+
+
+Controllers
+-----------
+
+1. SettingController.php
+   Methods:
+   - index()       -> show settings page
+   - update()      -> handle POST, validate, save settings
+
+---
+
+
+Models Used
+-----------
+
+1. User.php
+   Methods:
+   - getSettings($user_id)
+   - updateSettings($user_id, $data)
+
+2. Setting.php (if using separate settings table)
+   Methods:
+   - getByKey($user_id, $key)
+   - set($user_id, $key, $value)
+
+NOTE: For simplicity, settings can be stored as columns in users table or
+in a separate settings table. Recommended: use users table columns for
+simple settings (currency, date_format, email_notifications).
+
+---
+
+
+Settings Sections
+-----------------
+
+1. General Settings
+   - Currency: dropdown, required
+     Options: USD ($), EUR (€), GBP (£), INR (₹), JPY (¥), CAD (C$), AUD (A$), etc.
+     Store as 3-letter ISO code (USD, EUR, etc.)
+   - Date Format: dropdown, required
+     Options:
+       YYYY-MM-DD (2026-07-28)
+       DD-MM-YYYY (28-07-2026)
+       MM-DD-YYYY (07-28-2026)
+       DD/MM/YYYY (28/07/2026)
+       MM/DD/YYYY (07/28/2026)
+     Store as PHP date format string (Y-m-d, d-m-Y, etc.)
+
+2. Notification Settings
+   - Email Notifications: checkbox, default checked
+     - Receive email when expense/income added (optional)
+     - Receive weekly summary email (optional)
+     - Receive monthly report email (optional)
+
+3. Display Settings
+   - Transactions Per Page: dropdown, default 10
+     Options: 10, 25, 50, 100
+   - Default Transaction Type: radio buttons
+     Options: Expense, Income
+     Used when opening quick add form
+
+4. Data Management
+   - Export All Data: button -> triggers CSV export of all user data
+   - Clear All Data: button -> opens confirmation modal
+     - Deletes all transactions, categories (except defaults)
+     - Resets settings to default
+     - Cannot be undone
+
+---
+
+
+Settings Form Details
+---------------------
+
+Layout:
+   - Sections with headings
+   - Each section in a card or fieldset
+   - Save button at bottom
+   - Cancel button (redirects back)
+
+Fields:
+
+1. Currency
+   - Dropdown with all currency options
+   - Show currency symbol and code
+   - Example: "US Dollar ($) - USD"
+   - Default: USD
+
+2. Date Format
+   - Dropdown with format options
+   - Show example date for each format
+   - Example: "YYYY-MM-DD (2026-07-28)"
+   - Default: Y-m-d
+
+3. Email Notifications
+   - Checkbox: "Enable email notifications"
+   - Sub-options (if enabled):
+     - "Notify me when I add a transaction"
+     - "Send me weekly summary"
+     - "Send me monthly report"
+
+4. Transactions Per Page
+   - Dropdown: 10, 25, 50, 100
+   - Default: 10
+
+5. Default Transaction Type
+   - Radio buttons: Expense / Income
+   - Default: Expense
+
+---
+
+
+Data Export
+-----------
+
+Export All Data Button:
+   - Generates CSV file with:
+     - transactions.csv (all user transactions)
+     - categories.csv (all user categories)
+     - settings.csv (user settings)
+   - ZIP all files and download
+   - Filename: expense_tracker_data_YYYY-MM-DD.zip
+
+Export Format (CSV):
+   transactions.csv:
+     id, type, amount, description, date, category, created_at
+     1, expense, 50.00, Lunch, 2026-07-28, Food, 2026-07-28 12:00:00
+
+   categories.csv:
+     id, name, type, icon, color, is_default
+     1, Food, expense, utensils, #dc3545, 1
+
+---
+
+
+Clear All Data
+--------------
+
+Confirmation Modal:
+   - "This will permanently delete all your transactions and custom categories"
+   - "Default categories will be restored"
+   - "This action cannot be undone"
+   - Text input: "Type CLEAR to confirm"
+   - Confirm and Cancel buttons
+
+Behavior:
+   - Delete all transactions for user
+   - Delete all custom categories (is_default = 0) for user
+   - Reset settings to default values
+   - Keep user account intact
+   - Redirect to dashboard with success message
+
+---
+
+
+Currency Handling
+-----------------
+
+Display:
+   - Format amounts with currency symbol
+   - Example: $1,234.56 or ₹1,234.56
+   - Use number_format() with user's currency setting
+
+Currency Symbol Mapping:
+   USD -> $
+   EUR -> €
+   GBP -> £
+   INR -> ₹
+   JPY -> ¥
+   CAD -> C$
+   AUD -> A$
+
+Storage:
+   - Store currency code in users.currency column
+   - Use ISO 4217 3-letter codes
+
+---
+
+
+Date Format Handling
+--------------------
+
+Display:
+   - Format dates throughout app using user's preference
+   - Example: date('Y-m-d') for YYYY-MM-DD
+   - Use PHP date() function with stored format
+
+Input:
+   - Parse user input dates according to user's format
+   - Convert to YYYY-MM-DD for database storage
+
+---
+
+
+AJAX Endpoints
+--------------
+
+1. GET /settings/get
+   Purpose: Get current settings
+   Response: JSON object of all settings
+
+2. POST /settings/update
+   Purpose: Update settings
+   Request: Form data with settings
+   Response: {success: boolean, message: string}
+
+---
+
+
+Middleware
+----------
+
+- AuthMiddleware: required
+- CSRF Middleware: required for POST requests
+
+---
+
+
+Validation Rules
+----------------
+
+- currency: required|string|size:3|in:USD,EUR,GBP,INR,JPY,CAD,AUD
+- date_format: required|string|in:Y-m-d,d-m-Y,m-d-Y,d/m-Y,m/d/Y
+- email_notifications: boolean
+- transactions_per_page: required|integer|in:10,25,50,100
+- default_transaction_type: required|in:expense,income
+
+---
+
+
+Flash Messages
+--------------
+
+Success:
+- "Settings updated successfully"
+- "Data exported successfully"
+- "All data cleared successfully"
+
+Error:
+- "Failed to update settings. Please try again."
+- "Failed to export data. Please try again."
+- "Failed to clear data. Please try again."
+- "You do not have permission to perform this action"
+
+---
+
+
+Routes
+------
+
+GET    /settings                     -> SettingController@index
+POST   /settings/update              -> SettingController@update
+GET    /settings/export              -> SettingController@export (download)
+POST   /settings/clear-data          -> SettingController@clearData
+
+AJAX:
+GET    /settings/get
+POST   /settings/update
+
+---
+
+
+Assets Used
+-----------
+
+CSS: assets/css/settings.css
+JS:  assets/js/settings.js
+
+---
+
+
+Access Control
+--------------
+
+- All authenticated users can manage their own settings
+- Settings are user-specific
+- No admin settings in this module (application-wide settings would be separate)
+
+---
+
+
+Settings Storage
+----------------
+
+Option A: Columns in users table (Recommended for simple settings)
+   - currency (VARCHAR 3)
+   - date_format (VARCHAR 20)
+   - email_notifications (TINYINT)
+   - transactions_per_page (INT)
+   - default_transaction_type (ENUM)
+
+Option B: Separate settings table (for many settings)
+   - id, user_id, key, value, created_at, updated_at
+   - More flexible, easier to add new settings
+
+Recommended: Use Option A for this project as settings are few and well-defined.
+
+---
+
+
+Default Settings
+----------------
+
+On user registration, set defaults:
+   - currency: 'USD'
+   - date_format: 'Y-m-d'
+   - email_notifications: 1
+   - transactions_per_page: 10
+   - default_transaction_type: 'expense'
+
+---
+
+
+Email Notifications (Optional)
+-------------------------------
+
+If implementing:
+   - Use PHPMailer or similar library
+   - Queue emails (don't block request)
+   - Email templates in views/emails/
+   - Transaction notification: "A new expense of $50 was added"
+   - Weekly summary: "Your weekly expense summary"
+   - Monthly report: "Your monthly financial report"
+
+---
+
+
+IMPORTANT: Security Implementation Standards
+==============================================
+
+This module MUST follow these security practices in implementation:
+
+1. Prepared Statements: ALL database queries MUST use PDO prepared statements with bound parameters. Never concatenate user input into SQL queries.
+   Example: $stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = :user_id AND date >= :date_from");
+            $stmt->execute(['user_id' => $user_id, 'date_from' => $date_from]);
+
+2. Input Sanitization: ALL user inputs must be sanitized before validation and database insertion.
+   Example: $amount = filter_input(INPUT_POST, 'amount', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+            $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_SPECIAL_CHARS);
+
+3. Output Escaping: ALL dynamic content rendered in views MUST be escaped using htmlspecialchars() to prevent XSS.
+   Example: echo htmlspecialchars($transaction['description'], ENT_QUOTES, 'UTF-8');
+            echo htmlspecialchars($category['name'], ENT_QUOTES, 'UTF-8');
+
+4. Authorization Checks: Verify the logged-in user owns the resource before any operation.
+   Example: if ((int)$transaction['user_id'] !== (int)$_SESSION['user_id']) { http_response_code(403); exit('Forbidden'); }
+
+5. CSRF Protection: All POST/PUT/DELETE forms must include and validate CSRF tokens.
+   Example: if (!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) { http_response_code(403); exit('Invalid CSRF token'); }
+
+6. File Upload Security: Validate MIME type by extension and content, use random filenames, store outside web root if possible.
+   Example: $allowed = ['jpg','jpeg','png','gif'];
+            $ext = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, $allowed)) { reject; }
+
+---
+
+
+Testing Checklist
+-----------------
+
+- [ ] Settings page loads with current values
+- [ ] Currency setting updates and applies to all amounts
+- [ ] Date format setting updates and applies to all dates
+- [ ] Email notifications toggle saves correctly
+- [ ] Transactions per page setting applies to list pages
+- [ ] Default transaction type applies to quick add form
+- [ ] Data export generates valid CSV/ZIP file
+- [ ] Clear all data deletes transactions and resets settings
+- [ ] Cannot clear data of other users
+- [ ] CSRF protection works
+- [ ] Responsive design on mobile

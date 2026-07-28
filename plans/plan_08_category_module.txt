@@ -1,0 +1,369 @@
+Expense Tracker - Module 5: Category Management Module Plan
+=============================================================
+
+Module Name: Category Management
+File: plan_08_category_module.txt
+
+---
+
+
+Overview
+--------
+Allows users to create, edit, and delete custom categories for both income and expenses.
+The system comes with default categories pre-installed. Users can add their own categories
+with custom names, colors, and icons. Categories are used in expense and income forms.
+
+---
+
+
+Pages / Views
+-------------
+
+1. Categories List Page
+   Path: views/categories/index.php (or list.php)
+   Shows: tabs for Income/Expense, category cards/table, add button
+
+2. Create Category Page/Modal
+   Path: views/categories/create.php (or modal partial)
+   Shows: form to create new category
+
+3. Edit Category Page/Modal
+   Path: views/categories/edit.php (or modal partial)
+   Shows: form to edit existing category
+
+---
+
+
+Controllers
+-----------
+
+1. CategoryController.php
+   Methods:
+   - index()           -> show categories list with tabs
+   - create()          -> show create form/modal
+   - store()           -> handle POST, validate, create category
+   - edit($id)         -> show edit form/modal with data
+   - update($id)       -> handle PUT/PATCH, validate, update category
+   - destroy($id)      -> delete category
+   - getByType($type)  -> AJAX: get categories by type (income/expense)
+
+---
+
+
+Models Used
+-----------
+
+1. Category.php
+   Properties: id, user_id, name, type, icon, color, is_default, created_at, updated_at
+   Methods:
+   - create($user_id, $data)
+   - update($id, $user_id, $data)
+   - delete($id, $user_id)
+   - findById($id, $user_id)
+   - getByType($user_id, $type)
+   - getAll($user_id)
+   - isDefault($id)
+   - getDefaultCategories()
+
+---
+
+
+Categories List Page Details
+-----------------------------
+
+Layout Options:
+   Option A: Tabs at top (Income | Expense), cards below in grid
+   Option B: Tabs at top, table below
+   Recommended: Cards grid for visual appeal
+
+Tabs:
+   - "Income Categories" tab
+   - "Expense Categories" tab
+   - Active tab highlighted
+
+Default Categories (shown but not deletable):
+   Income:
+   - Salary (icon: briefcase, color: #28a745)
+   - Freelance (icon: laptop, color: #17a2b8)
+   - Investment (icon: chart-line, color: #ffc107)
+   - Gift (icon: gift, color: #e83e8c)
+   - Other Income (icon: ellipsis-h, color: #6c757d)
+
+   Expense:
+   - Food (icon: utensils, color: #dc3545)
+   - Transport (icon: bus, color: #fd7e14)
+   - Housing (icon: home, color: #20c997)
+   - Utilities (icon: bolt, color: #6610f2)
+   - Entertainment (icon: film, color: #e83e8c)
+   - Shopping (icon: shopping-cart, color: #d63384)
+   - Healthcare (icon: heartbeat, color: #dc3545)
+   - Education (icon: graduation-cap, color: #0d6efd)
+   - Other Expense (icon: ellipsis-h, color: #6c757d)
+
+Category Card Design:
+   - Color bar on left side (category color)
+   - Category name
+   - Icon displayed
+   - "Default" badge for default categories
+   - Edit button (only for custom categories)
+   - Delete button (only for custom categories, with confirmation)
+   - Transaction count badge (optional)
+
+Add Category Button:
+   - Floating action button (FAB) on mobile
+   - "Add Category" button at top right on desktop
+   - Opens modal or navigates to create page
+
+---
+
+
+Create Category Form
+---------------------
+
+Fields:
+   - Name: text input, required, max 50 chars
+   - Type: radio buttons (Income / Expense), required, default based on active tab
+   - Icon: dropdown or icon picker, required, default generic icon
+     Options: briefcase, laptop, chart-line, gift, utensils, bus, home, bolt, film, shopping-cart, heart, graduation-cap, ellipsis-h, etc.
+   - Color: color picker, required, default random or #000000
+   - Submit button
+   - Cancel button
+
+Validation:
+   - name: required, string, max 50, unique per user per type
+   - type: required, in: income, expense
+   - icon: required, string
+   - color: required, valid hex color (#RRGGBB)
+
+Success: Redirect to categories list with success message
+Failure: Redirect back with errors
+
+---
+
+
+Edit Category Form
+------------------
+
+Same form as create, pre-filled:
+   - Load category by id and user_id
+   - Show 404 if not found or not owned by user
+   - Cannot edit default categories (show message or hide edit button)
+   - Pre-fill name, type, icon, color
+   - Submit button says "Update Category"
+   - Delete button shown (with confirmation)
+
+Validation:
+   - Same as create
+   - Name must be unique excluding current category
+
+---
+
+
+Delete Category
+----------------
+
+Confirmation Modal:
+   - "Are you sure you want to delete this category?"
+   - Show category name and icon
+   - Warning: "Transactions using this category will not be deleted"
+   - Confirm and Cancel buttons
+
+Behavior:
+   - Soft delete or hard delete (recommended: hard delete)
+   - Transactions with this category keep the category name as text (or set to NULL/Other)
+   - Cannot delete default categories (show error)
+   - Success: redirect to list with success message
+
+---
+
+
+AJAX Endpoints
+--------------
+
+1. GET /categories/get-by-type
+   Purpose: Get categories filtered by type for dropdowns in expense/income forms
+   Request: ?type=expense or ?type=income
+   Response: JSON array of {id, name, color, icon}
+
+2. POST /categories/check-name
+   Purpose: Check if category name already exists for user
+   Request: {name, type, category_id (optional for edit)}
+   Response: {exists: boolean}
+
+---
+
+
+Middleware
+----------
+
+- AuthMiddleware: required
+- CSRF Middleware: required for POST requests
+
+---
+
+
+Validation Rules
+----------------
+
+Store/Update:
+- name: required|string|max:50|unique:categories,name,NULL,id,user_id,{user_id},type,{type}
+- type: required|in:income,expense
+- icon: required|string
+- color: required|regex:/^#[0-9A-Fa-f]{6}$/
+
+---
+
+
+Flash Messages
+--------------
+
+Success:
+- "Category created successfully"
+- "Category updated successfully"
+- "Category deleted successfully"
+
+Error:
+- "Category name already exists"
+- "Failed to create category. Please try again."
+- "Failed to update category. Please try again."
+- "Cannot delete default categories"
+- "Failed to delete category. Please try again."
+- "You do not have permission to perform this action"
+
+---
+
+
+Routes
+------
+
+GET    /categories                     -> CategoryController@index
+GET    /categories/create              -> CategoryController@create
+POST   /categories                     -> CategoryController@store
+GET    /categories/{id}/edit           -> CategoryController@edit
+PUT    /categories/{id}                -> CategoryController@update
+DELETE /categories/{id}                -> CategoryController@destroy
+GET    /categories/get-by-type         -> CategoryController@getByType (AJAX)
+POST   /categories/check-name          -> CategoryController@checkName (AJAX)
+
+---
+
+
+Assets Used
+-----------
+
+CSS: assets/css/categories.css
+JS:  assets/js/categories.js
+
+---
+
+
+Default Categories Behavior
+----------------------------
+
+On user registration:
+   - Create all default categories for the new user
+   - Set is_default = 1, user_id = new user's id
+   - User can rename or delete these if needed
+
+Default category insertion:
+   - Done in User model afterCreate or in a migration/seeder
+   - Or in AuthController after successful registration
+
+---
+
+
+Icon Library
+------------
+
+Use a consistent icon set:
+   - Bootstrap Icons (bi-*) or Font Awesome or custom SVG icons
+   - Store icon name as string in database
+   - Render using <i class="bi bi-{icon}"></i> or similar
+
+Recommended icons list:
+   briefcase, laptop, chart-line, gift, utensils, bus, home, bolt, film, shopping-cart, heart, graduation-cap, ellipsis-h, car, plane, gym, book, baby, dog, cat, etc.
+
+---
+
+
+Color Picker
+------------
+
+   - Native HTML5 color input <input type="color">
+   - Or a predefined color palette with clickable swatches
+   - Store as hex value (#RRGGBB) in database
+   - Display as small circle or full bar
+
+---
+
+
+Access Control
+--------------
+
+- Users can only manage their own categories
+- Default categories (is_default = 1) can be edited but not deleted
+- Users cannot access other users' categories
+- If a category is deleted, transactions retain the category name as text
+
+---
+
+
+Empty States
+------------
+
+- No categories: "You have no custom categories yet. Create your first category!"
+- No income categories: "No income categories yet. Create one!"
+- No expense categories: "No expense categories yet. Create one!"
+
+---
+
+
+IMPORTANT: Security Implementation Standards
+==============================================
+
+This module MUST follow these security practices in implementation:
+
+1. Prepared Statements: ALL database queries MUST use PDO prepared statements with bound parameters. Never concatenate user input into SQL queries.
+   Example: $stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = :user_id AND date >= :date_from");
+            $stmt->execute(['user_id' => $user_id, 'date_from' => $date_from]);
+
+2. Input Sanitization: ALL user inputs must be sanitized before validation and database insertion.
+   Example: $amount = filter_input(INPUT_POST, 'amount', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+            $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_SPECIAL_CHARS);
+
+3. Output Escaping: ALL dynamic content rendered in views MUST be escaped using htmlspecialchars() to prevent XSS.
+   Example: echo htmlspecialchars($transaction['description'], ENT_QUOTES, 'UTF-8');
+            echo htmlspecialchars($category['name'], ENT_QUOTES, 'UTF-8');
+
+4. Authorization Checks: Verify the logged-in user owns the resource before any operation.
+   Example: if ((int)$transaction['user_id'] !== (int)$_SESSION['user_id']) { http_response_code(403); exit('Forbidden'); }
+
+5. CSRF Protection: All POST/PUT/DELETE forms must include and validate CSRF tokens.
+   Example: if (!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) { http_response_code(403); exit('Invalid CSRF token'); }
+
+6. File Upload Security: Validate MIME type by extension and content, use random filenames, store outside web root if possible.
+   Example: $allowed = ['jpg','jpeg','png','gif'];
+            $ext = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, $allowed)) { reject; }
+
+---
+
+
+Testing Checklist
+-----------------
+
+- [ ] Default categories are created on registration
+- [ ] Categories list shows income and expense tabs
+- [ ] Create category works and appears in list
+- [ ] Edit category updates correctly
+- [ ] Cannot edit default categories (or can edit but not delete)
+- [ ] Delete custom category works
+- [ ] Cannot delete default categories
+- [ ] Category name uniqueness validation works
+- [ ] Categories appear in expense dropdown
+- [ ] Categories appear in income dropdown
+- [ ] AJAX endpoints return correct JSON
+- [ ] Color picker works and saves hex value
+- [ ] Icon selection works
+- [ ] CSRF protection works
+- [ ] Responsive design on mobile

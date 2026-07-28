@@ -1,0 +1,431 @@
+Expense Tracker - Module 10: Budget Management Module Plan
+============================================================
+
+Module Name: Budget Management
+File: plan_13_budget_module.txt
+
+---
+
+
+Overview
+--------
+Allows users to set monthly budget limits per expense category.
+Users can track their spending against budgets and receive alerts
+when they are close to or exceed their budget limits.
+
+NOTE: This is an optional module. Can be implemented in Phase 2 if Phase 1
+takes too long. The database design already includes the budgets table.
+
+---
+
+
+Pages / Views
+-------------
+
+1. Budgets List Page
+   Path: views/budgets/index.php
+   Shows: current month budgets, progress bars, alerts
+
+2. Create/Edit Budget Page
+   Path: views/budgets/create.php or edit.php (or modal)
+   Shows: form to set budget for a category and month
+
+---
+
+
+Controllers
+-----------
+
+1. BudgetController.php
+   Methods:
+   - index()           -> show budgets list for current month
+   - create()          -> show create budget form
+   - store()           -> handle POST, validate, create budget
+   - edit($id)         -> show edit budget form
+   - update($id)       -> handle PUT/PATCH, update budget
+   - destroy($id)      -> delete budget
+   - getProgress()     -> AJAX: get budget progress for all categories
+   - checkAlerts()     -> AJAX: check if any budget exceeded (for notifications)
+
+---
+
+
+Models Used
+-----------
+
+1. Budget.php
+   Properties: id, user_id, category_id, amount, month, created_at, updated_at
+   Methods:
+   - create($user_id, $data)
+   - update($id, $user_id, $data)
+   - delete($id, $user_id)
+   - findByMonth($user_id, $month)
+   - findByCategory($user_id, $category_id, $month)
+   - getAllForMonth($user_id, $month)
+
+2. Transaction.php
+   Methods:
+   - getExpenseTotalByCategory($user_id, $category_id, $month, $year)
+   - getExpenseTotalForMonth($user_id, $month, $year)
+
+3. Category.php
+   Methods:
+   - getExpenseCategories($user_id)
+   - getById($user_id, $id)
+
+---
+
+
+Budgets List Page Details
+--------------------------
+
+Layout:
+   - Month selector at top (dropdown to change month)
+   - Budget cards or table for each expense category
+   - Progress bar for each category showing spending vs budget
+   - Alert indicators for exceeded/near-limit budgets
+   - "Set Budget" button
+
+Budget Card Design:
+   - Category name with icon and color
+   - Budget amount
+   - Spent amount (calculated from transactions)
+   - Remaining amount
+   - Progress bar (percentage of budget used)
+     - Green: 0-70% used
+     - Yellow: 70-90% used
+     - Red: 90-100% used
+     - Full red: 100%+ (exceeded)
+   - "Edit" button
+   - "Delete" button
+   - Alert badge if exceeded
+
+Month Selector:
+   - Dropdown with months: "July 2026", "June 2026", etc.
+   - Default: current month
+   - Can view past months (read-only) or future months (editable)
+
+---
+
+
+Create/Edit Budget Form
+-----------------------
+
+Fields:
+   - Category: dropdown, required, expense categories only
+   - Month: date input (month picker), required, default first day of current month
+   - Budget Amount: number input, required, min 0.01
+   - Submit button
+   - Cancel button
+
+Month Input:
+   - Use month picker (YYYY-MM format)
+   - Store as first day of month in database (2026-07-01)
+   - Default: current month (first day)
+
+Validation:
+   - category_id: required|exists:categories,id|type:expense
+   - month: required|date|date_format:Y-m-d
+   - amount: required|numeric|min:0.01
+
+Unique Constraint:
+   - One budget per user per category per month
+   - If budget already exists for selected category and month, show edit form instead
+
+---
+
+
+Budget Progress Calculation
+---------------------------
+
+For each category with a budget:
+   - spent = sum of expense transactions for that category in that month
+   - remaining = budget_amount - spent
+   - percentage = (spent / budget_amount) * 100
+
+Display:
+   - Progress bar width = min(percentage, 100)%
+   - Color based on percentage thresholds
+   - Show exact percentage text
+
+---
+
+
+Budget Alerts
+-------------
+
+Alert Levels:
+   1. Warning (70-90% used): Yellow indicator
+      Message: "You've used {percentage}% of your {category} budget"
+
+   2. Danger (90-100% used): Orange indicator
+      Message: "You're almost at your {category} budget limit"
+
+   3. Exceeded (100%+ used): Red indicator
+      Message: "You've exceeded your {category} budget by {over_amount}"
+
+Alert Display:
+   - Alert badges on budget cards
+   - Notification bell icon in navbar with count
+   - Alert banner on dashboard (optional)
+
+---
+
+
+AJAX Endpoints
+--------------
+
+1. GET /budgets/progress
+   Purpose: Get budget progress for all categories for a month
+   Request: ?month=YYYY-MM-DD
+   Response: JSON array of {category_id, category_name, budget_amount, spent, remaining, percentage, status}
+
+2. GET /budgets/alerts
+   Purpose: Check for any budget alerts
+   Request: ?month=YYYY-MM-DD
+   Response: JSON array of alerts {level, category, message}
+
+3. GET /budgets/categories
+   Purpose: Get expense categories for dropdown
+   Response: JSON array of {id, name, color}
+
+---
+
+
+Middleware
+----------
+
+- AuthMiddleware: required
+- CSRF Middleware: required for POST requests
+
+---
+
+
+Validation Rules
+----------------
+
+Store/Update:
+- category_id: required|exists:categories,id|type:expense
+- month: required|date|date_format:Y-m-d
+- amount: required|numeric|min:0.01
+
+Unique: user_id + category_id + month
+
+---
+
+
+Flash Messages
+--------------
+
+Success:
+- "Budget set successfully"
+- "Budget updated successfully"
+- "Budget deleted successfully"
+
+Error:
+- "Budget for this category and month already exists"
+- "Failed to set budget. Please try again."
+- "Failed to update budget. Please try again."
+- "Failed to delete budget. Please try again."
+- "You do not have permission to perform this action"
+
+---
+
+
+Routes
+------
+
+GET    /budgets                      -> BudgetController@index
+GET    /budgets/create               -> BudgetController@create
+POST   /budgets                      -> BudgetController@store
+GET    /budgets/{id}/edit            -> BudgetController@edit
+PUT    /budgets/{id}                 -> BudgetController@update
+DELETE /budgets/{id}                 -> BudgetController@destroy
+GET    /budgets/progress             -> BudgetController@getProgress (AJAX)
+GET    /budgets/alerts               -> BudgetController@checkAlerts (AJAX)
+GET    /budgets/categories           -> BudgetController@getCategories (AJAX)
+
+---
+
+
+Assets Used
+-----------
+
+CSS: assets/css/budgets.css
+JS:  assets/js/budgets.js
+
+---
+
+
+Budget Views Integration
+-------------------------
+
+1. Dashboard Integration:
+   - Show budget progress on dashboard (optional)
+   - Show alert banner if any budget exceeded
+   - Quick link to budgets page
+
+2. Expense Form Integration:
+   - When adding expense, check if it pushes category over budget
+   - Show warning: "This expense will exceed your {category} budget"
+
+3. Reports Integration:
+   - Budget vs Actual report in reports module
+   - Show budget amount, actual spent, variance
+
+---
+
+
+Database Logic
+--------------
+
+Table: budgets
+   - id, user_id, category_id, amount, month, created_at, updated_at
+
+Month Storage:
+   - Store as DATE type: first day of month (YYYY-MM-01)
+   - Use for filtering and grouping
+   - Example: July 2026 = '2026-07-01'
+
+Budget Period:
+   - Budgets are monthly by design
+   - Cannot set weekly or yearly budgets (out of scope)
+   - Each month has independent budgets
+
+---
+
+
+Budget Calculation Logic
+------------------------
+
+When user views budgets for a month:
+   1. Fetch all budgets for user and selected month
+   2. For each budget:
+      a. Get category details
+      b. Calculate total expenses for that category in that month
+      c. Calculate percentage used
+      d. Determine status (normal, warning, danger, exceeded)
+   3. Display budget cards with progress
+
+When user adds/edits/deletes expense:
+   1. Check if expense category has a budget for that month
+   2. If yes, recalculate budget progress
+   3. If exceeded, trigger alert (optional)
+
+---
+
+
+Access Control
+--------------
+
+- Users can only manage their own budgets
+- Users cannot view/edit other users' budgets
+- Budgets are per-user and per-month
+
+---
+
+
+Empty States
+------------
+
+- No budgets set: "You haven't set any budgets yet. Set your first budget to start tracking!"
+- No budgets for selected month: "No budgets set for this month. Select a different month or create a new budget."
+- No expense categories: "No expense categories found. Please create categories first."
+
+---
+
+
+Budget vs Actual Report (Optional)
+-----------------------------------
+
+If integrating with reports:
+   - Show table: Category, Budget, Actual Spent, Variance, % Used
+   - Bar chart comparing budget vs actual
+   - Highlight categories over budget
+
+---
+
+
+Notification System (Optional)
+-------------------------------
+
+If implementing notifications:
+   - Email notification when budget exceeded
+   - In-app notification badge
+   - Notification settings in Settings module
+
+Database (optional):
+   Table: notifications
+   - id, user_id, type, message, is_read, created_at
+
+---
+
+
+IMPORTANT: Security Implementation Standards
+==============================================
+
+This module MUST follow these security practices in implementation:
+
+1. Prepared Statements: ALL database queries MUST use PDO prepared statements with bound parameters. Never concatenate user input into SQL queries.
+   Example: $stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = :user_id AND date >= :date_from");
+            $stmt->execute(['user_id' => $user_id, 'date_from' => $date_from]);
+
+2. Input Sanitization: ALL user inputs must be sanitized before validation and database insertion.
+   Example: $amount = filter_input(INPUT_POST, 'amount', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+            $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_SPECIAL_CHARS);
+
+3. Output Escaping: ALL dynamic content rendered in views MUST be escaped using htmlspecialchars() to prevent XSS.
+   Example: echo htmlspecialchars($transaction['description'], ENT_QUOTES, 'UTF-8');
+            echo htmlspecialchars($category['name'], ENT_QUOTES, 'UTF-8');
+
+4. Authorization Checks: Verify the logged-in user owns the resource before any operation.
+   Example: if ((int)$transaction['user_id'] !== (int)$_SESSION['user_id']) { http_response_code(403); exit('Forbidden'); }
+
+5. CSRF Protection: All POST/PUT/DELETE forms must include and validate CSRF tokens.
+   Example: if (!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) { http_response_code(403); exit('Invalid CSRF token'); }
+
+6. File Upload Security: Validate MIME type by extension and content, use random filenames, store outside web root if possible.
+   Example: $allowed = ['jpg','jpeg','png','gif'];
+            $ext = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, $allowed)) { reject; }
+
+---
+
+
+Testing Checklist
+-----------------
+
+- [ ] Budgets page loads with current month budgets
+- [ ] Month selector changes displayed budgets
+- [ ] Create budget form validates correctly
+- [ ] Budget is created and appears in list
+- [ ] Edit budget updates correctly
+- [ ] Delete budget removes it
+- [ ] Cannot create duplicate budget for same category and month
+- [ ] Progress bar calculates correctly
+- [ ] Progress bar colors change based on percentage
+   - [ ] Green for 0-70%
+   - [ ] Yellow for 70-90%
+   - [ ] Orange for 90-100%
+   - [ ] Red for 100%+
+- [ ] Alerts display correctly
+- [ ] AJAX endpoints return correct data
+- [ ] Dashboard shows budget alerts (if integrated)
+- [ ] Expense form warns if exceeding budget (if integrated)
+- [ ] Cannot access other user's budgets
+- [ ] CSRF protection works
+- [ ] Responsive design on mobile
+
+---
+
+
+Phase Recommendation
+---------------------
+
+This module is marked as optional because:
+   1. Core functionality (Auth, Dashboard, Expense, Income, Category, Reports, User, Settings, Search) is complete without it
+   2. Requires additional UI complexity (progress bars, alerts, notifications)
+   3. Database schema already supports it (budgets table exists)
+   4. Can be added in Phase 2 after core modules are stable
+
+Recommended priority: Phase 2 (after all core modules are tested and working)

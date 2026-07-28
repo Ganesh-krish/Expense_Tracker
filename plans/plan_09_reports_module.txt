@@ -1,0 +1,433 @@
+Expense Tracker - Module 6: Reports & Analytics Module Plan
+=============================================================
+
+Module Name: Reports & Analytics
+File: plan_09_reports_module.txt
+
+---
+
+
+Overview
+--------
+Provides detailed financial reports and analytics. Users can view expense reports,
+income reports, monthly comparisons, and category-wise breakdowns.
+Reports can be filtered by date range and exported to CSV or PDF.
+
+---
+
+
+Pages / Views
+-------------
+
+1. Reports Dashboard
+   Path: views/reports/index.php
+   Shows: report type selection tabs, filter form, report content area
+
+2. Expense Report Page
+   Path: views/reports/expense_report.php
+   Shows: expense breakdown with charts and tables
+
+3. Income Report Page
+   Path: views/reports/income_report.php
+   Shows: income breakdown with charts and tables
+
+4. Monthly Comparison Report
+   Path: views/reports/monthly_report.php
+   Shows: month-by-month comparison of income vs expense
+
+---
+
+
+Controllers
+-----------
+
+1. ReportController.php
+   Methods:
+   - index()                   -> show reports dashboard
+   - expenseReport()           -> show expense report with filters
+   - incomeReport()            -> show income report with filters
+   - monthlyReport()           -> show monthly comparison report
+   - exportCsv($type)          -> export report data as CSV
+   - exportPdf($type)          -> export report data as PDF (optional)
+
+---
+
+
+Models Used
+-----------
+
+1. Transaction.php
+   Methods:
+   - getExpenseReport($user_id, $filters)
+   - getIncomeReport($user_id, $filters)
+   - getMonthlyComparison($user_id, $start_date, $end_date)
+   - getCategoryWiseSummary($user_id, $type, $start_date, $end_date)
+   - getDailySummary($user_id, $type, $start_date, $end_date)
+
+2. Category.php
+   Methods:
+   - getByType($user_id, $type)
+
+---
+
+
+Report Types
+------------
+
+1. Expense Report
+   - Category-wise expense breakdown
+   - Total expense amount
+   - Percentage per category
+   - Daily/Monthly trend
+   - Top spending categories
+
+2. Income Report
+   - Category-wise income breakdown
+   - Total income amount
+   - Percentage per category
+   - Daily/Monthly trend
+   - Top income sources
+
+3. Monthly Comparison Report
+   - Month-by-month income vs expense
+   - Savings per month
+   - Percentage change month over month
+   - Bar chart comparing income and expense
+
+---
+
+
+Filter Options
+--------------
+
+Common filters for all reports:
+   - Date From: date input, required
+   - Date To: date input, required, must be >= Date From
+   - Category: dropdown (optional, "All Categories" default)
+   - Report Period: preset buttons (This Month, Last Month, This Year, Last Year, Custom)
+
+Preset Periods:
+   - This Month: first day to last day of current month
+   - Last Month: first day to last day of previous month
+   - This Year: Jan 1 to Dec 31 of current year
+   - Last Year: Jan 1 to Dec 31 of previous year
+   - Custom: user selects from and to dates
+
+---
+
+
+Report Display Components
+--------------------------
+
+1. Summary Cards (at top)
+   - Total Amount (total expense/income for period)
+   - Total Transactions (count)
+   - Average per Day/Transaction
+   - Highest Transaction Amount
+   - Lowest Transaction Amount
+
+2. Charts
+   - Pie Chart: Category-wise distribution
+   - Bar Chart: Daily/Monthly trend
+   - Line Chart: Trend over time (optional)
+
+3. Tables
+   - Category breakdown table:
+     Columns: Category, Amount, Percentage, Transaction Count, Average
+   - Transaction list table:
+     Columns: Date, Description, Category, Amount
+   - Monthly comparison table:
+     Columns: Month, Income, Expense, Savings, Change %
+
+4. Visual Indicators
+   - Progress bars for percentages
+   - Color coding (green for income, red for expense)
+   - Sparklines or mini charts (optional)
+
+---
+
+
+Expense Report Details
+----------------------
+
+Summary Section:
+   - Total Expenses: $X,XXX.XX
+   - Number of Transactions: XX
+   - Average per Transaction: $XX.XX
+   - Highest Expense: $X,XXX.XX (on date)
+   - Lowest Expense: $X.XX (on date)
+
+Category Breakdown Table:
+   | Category | Amount | % | Count | Average |
+   | Food     | $500   | 25%| 15   | $33.33  |
+   | Transport| $300   | 15%| 20   | $15.00  |
+
+   - Sorted by amount descending
+   - Show color indicator for each category
+   - Percentage column with progress bar
+
+Daily Trend Chart:
+   - X-axis: dates in selected range
+   - Y-axis: expense amount
+   - Bar chart or line chart
+
+Transaction List:
+   - Paginated table of all transactions in range
+   - Same columns as expense list page
+   - Sortable by date/amount
+
+---
+
+
+Income Report Details
+---------------------
+
+Same structure as Expense Report but for income:
+   - Total Income instead of Total Expenses
+   - Income categories breakdown
+   - Green color theme instead of red
+   - Daily/Monthly income trend chart
+
+---
+
+
+Monthly Comparison Report Details
+----------------------------------
+
+Table Format:
+   | Month     | Income | Expense | Savings | % Change |
+   | Jan 2026  | $5000  | $3000   | $2000   | -        |
+   | Feb 2026  | $5200  | $3200   | $2000   | +4%      |
+   | Mar 2026  | $4800  | $3500   | $1300   | -7.7%    |
+
+   - Savings = Income - Expense
+   - % Change = ((current - previous) / previous) * 100
+   - Green for positive savings, red for negative
+   - Green arrow up for positive change, red arrow down for negative
+
+Charts:
+   - Grouped bar chart: Income vs Expense per month
+   - Line chart: Savings trend over months
+   - Stacked bar chart: Category-wise expense per month (optional)
+
+---
+
+
+Export Functionality
+--------------------
+
+1. CSV Export
+   - Filename: expense_report_2026_01_01_to_2026_01_31.csv
+   - Headers: Date, Description, Category, Amount, Type
+   - All transactions in selected range
+   - UTF-8 encoded
+   - Comma-separated values
+
+2. PDF Export (Optional, more complex)
+   - Use library like TCPDF, mPDF, or Dompdf
+   - Include summary, charts, and tables
+   - Professional layout with header/footer
+   - Page numbers
+
+Export Buttons:
+   - "Export CSV" button on each report page
+   - "Export PDF" button (if implemented)
+   - Export respects current filters
+
+---
+
+
+AJAX Endpoints
+--------------
+
+1. GET /reports/data
+   Purpose: Get report data for charts
+   Request: ?type=expense|income|monthly&date_from=YYYY-MM-DD&date_to=YYYY-MM-DD&category_id=X
+   Response: JSON with summary, chart data, table data
+
+2. GET /reports/categories
+   Purpose: Get categories for filter dropdown
+   Request: ?type=expense|income
+   Response: JSON array of categories
+
+---
+
+
+Charts Implementation
+---------------------
+
+Library: Chart.js (recommended)
+- Pie/Doughnut chart for category breakdown
+- Bar chart for daily/monthly trends
+- Line chart for trend over time
+- Grouped bar chart for monthly comparison
+
+Chart Options:
+   - Responsive: true
+   - Maintain aspect ratio: false (for flexible containers)
+   - Tooltips enabled
+   - Legend positioned at top or right
+   - Animation on load
+
+---
+
+
+Print Styles
+------------
+
+- "Print Report" button
+- Print-specific CSS:
+  - Hide navigation, sidebar, buttons
+  - Show only report content
+  - Black and white friendly
+  - Page breaks for long tables
+
+---
+
+
+Middleware
+----------
+
+- AuthMiddleware: required
+- No additional middleware needed
+
+---
+
+
+Validation Rules
+----------------
+
+Filters:
+- date_from: required|date
+- date_to: required|date|after_or_equal:date_from
+- category_id: nullable|exists:categories,id
+- type: required|in:expense,income,monthly
+
+---
+
+
+Flash Messages
+--------------
+
+Success:
+- "Report generated successfully"
+- "Report exported to CSV successfully"
+- "Report exported to PDF successfully"
+
+Error:
+- "Invalid date range"
+- "No data available for selected period"
+- "Failed to generate report. Please try again."
+- "Failed to export report. Please try again."
+
+---
+
+
+Routes
+------
+
+GET    /reports                     -> ReportController@index
+GET    /reports/expense             -> ReportController@expenseReport
+GET    /reports/income              -> ReportController@incomeReport
+GET    /reports/monthly             -> ReportController@monthlyReport
+GET    /reports/export/csv          -> ReportController@exportCsv
+GET    /reports/export/pdf          -> ReportController@exportPdf (optional)
+GET    /reports/data                -> ReportController@getData (AJAX)
+GET    /reports/categories          -> ReportController@getCategories (AJAX)
+
+---
+
+
+Assets Used
+-----------
+
+CSS: assets/css/reports.css
+JS:  assets/js/reports.js
+
+Libraries: Chart.js, jQuery
+
+---
+
+
+Report Cache (Optional)
+-----------------------
+
+- Cache report data for frequently accessed periods
+- Reduce database load for large datasets
+- Clear cache when new transactions are added
+- Cache key: report_{user_id}_{type}_{date_from}_{date_to}
+
+---
+
+
+Access Control
+--------------
+
+- All authenticated users can view their own reports
+- Users can only see their own transaction data
+- Reports respect user's currency setting
+
+---
+
+
+Performance Considerations
+---------------------------
+
+- Use indexes on user_id and date columns in transactions table
+- Limit results for large date ranges (e.g., max 2 years at a time)
+- Paginate transaction list tables
+- Use COUNT queries instead of fetching all records for totals
+- Consider data aggregation for very large datasets
+
+---
+
+
+IMPORTANT: Security Implementation Standards
+==============================================
+
+This module MUST follow these security practices in implementation:
+
+1. Prepared Statements: ALL database queries MUST use PDO prepared statements with bound parameters. Never concatenate user input into SQL queries.
+   Example: $stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = :user_id AND date >= :date_from");
+            $stmt->execute(['user_id' => $user_id, 'date_from' => $date_from]);
+
+2. Input Sanitization: ALL user inputs must be sanitized before validation and database insertion.
+   Example: $amount = filter_input(INPUT_POST, 'amount', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+            $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_SPECIAL_CHARS);
+
+3. Output Escaping: ALL dynamic content rendered in views MUST be escaped using htmlspecialchars() to prevent XSS.
+   Example: echo htmlspecialchars($transaction['description'], ENT_QUOTES, 'UTF-8');
+            echo htmlspecialchars($category['name'], ENT_QUOTES, 'UTF-8');
+
+4. Authorization Checks: Verify the logged-in user owns the resource before any operation.
+   Example: if ((int)$transaction['user_id'] !== (int)$_SESSION['user_id']) { http_response_code(403); exit('Forbidden'); }
+
+5. CSRF Protection: All POST/PUT/DELETE forms must include and validate CSRF tokens.
+   Example: if (!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) { http_response_code(403); exit('Invalid CSRF token'); }
+
+6. File Upload Security: Validate MIME type by extension and content, use random filenames, store outside web root if possible.
+   Example: $allowed = ['jpg','jpeg','png','gif'];
+            $ext = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, $allowed)) { reject; }
+
+---
+
+
+Testing Checklist
+-----------------
+
+- [ ] Reports dashboard loads with tabs
+- [ ] Expense report shows correct data for selected period
+- [ ] Income report shows correct data for selected period
+- [ ] Monthly comparison shows correct month-by-month data
+- [ ] Filters work correctly (date range, category)
+- [ ] Preset period buttons set correct dates
+- [ ] Charts render correctly with data
+- [ ] Summary cards show correct totals
+- [ ] Category breakdown table shows correct percentages
+- [ ] CSV export generates valid file with correct data
+- [ ] PDF export works (if implemented)
+- [ ] Print styles work correctly
+- [ ] Empty states display when no data
+- [ ] Responsive design on mobile
+- [ ] Large date ranges handled without timeout

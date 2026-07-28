@@ -1,0 +1,339 @@
+Expense Tracker - Module 7: User Management Module Plan
+=========================================================
+
+Module Name: User Management
+File: plan_10_user_management_module.txt
+
+---
+
+
+Overview
+--------
+Allows users to view and edit their profile, change their password, and manage
+account settings like profile picture and personal information.
+This is a single-user management module (no admin multi-user management).
+
+---
+
+
+Pages / Views
+-------------
+
+1. Profile Page
+   Path: views/users/profile.php
+   Shows: user info display, edit form, change password section
+
+2. Settings Page
+   Path: views/users/settings.php
+   Shows: account settings, preferences
+
+---
+
+
+Controllers
+-----------
+
+1. UserController.php
+   Methods:
+   - profile()      -> show profile page with user data
+   - updateProfile() -> handle POST, validate, update user profile
+   - changePassword() -> handle POST, validate, update password
+   - deleteAccount() -> handle POST, delete user account (with confirmation)
+
+---
+
+
+Models Used
+-----------
+
+1. User.php
+   Methods:
+   - findById($id)
+   - updateProfile($id, $data)
+   - updatePassword($id, $new_password)
+   - deleteAccount($id)
+   - uploadProfilePicture($id, $file)
+
+---
+
+
+Profile Page Details
+--------------------
+
+Sections:
+
+1. Profile Information
+   - Avatar/Profile Picture (large)
+   - Username (read-only)
+   - Email (read-only)
+   - First Name (editable)
+   - Last Name (editable)
+   - Member Since (read-only, formatted date)
+
+2. Edit Profile Form
+   - First Name: text input, required, max 50
+   - Last Name: text input, required, max 50
+   - Profile Picture: file input, optional
+     - Show current picture if exists
+     - Preview new image before upload
+     - Max file size: 1MB
+     - Allowed types: jpg, jpeg, png
+   - Submit button "Update Profile"
+
+3. Change Password Section
+   - Current Password: password input, required
+   - New Password: password input, required, min 6
+   - Confirm New Password: password input, required
+   - Submit button "Change Password"
+
+4. Danger Zone (bottom of page)
+   - Delete Account button
+   - Opens confirmation modal
+   - Requires typing "DELETE" to confirm (optional extra safety)
+
+---
+
+
+Edit Profile Validation
+-----------------------
+
+- first_name: required|string|max:50
+- last_name: required|string|max:50
+- profile_picture: nullable|image|mimes:jpg,jpeg,png|max:1024 (1MB)
+
+---
+
+
+Change Password Validation
+---------------------------
+
+- current_password: required|string
+- new_password: required|string|min:6|different:current_password
+- confirm_password: required|string|same:new_password
+
+Logic:
+   - Verify current password matches stored hash
+   - Hash new password with password_hash()
+   - Update database
+   - Invalidate all existing sessions (optional)
+
+---
+
+
+Profile Picture Upload
+----------------------
+
+Storage: uploads/avatars/
+Naming: avatar_{user_id}_{timestamp}.{ext}
+   Example: avatar_1_1657891234.jpg
+Permissions: 0644
+Resize: Create thumbnail version (200x200) for display
+Old file cleanup: Delete old avatar when updating
+
+Validation:
+   - File type: jpg, jpeg, png only
+   - Max size: 1MB
+   - Dimensions: minimum 100x100, maximum 2000x2000
+
+---
+
+
+Delete Account
+--------------
+
+Confirmation Modal:
+   - "This action cannot be undone"
+   - "All your data including transactions, categories, and settings will be permanently deleted"
+   - Text input: "Type DELETE to confirm"
+   - Confirm and Cancel buttons
+
+Behavior:
+   - Delete user record (cascade delete related records)
+   - Delete all user's transactions
+   - Delete all user's categories
+   - Delete all user's settings
+   - Delete all user's uploaded files (receipts, avatars)
+   - Destroy session
+   - Redirect to home page with message
+
+---
+
+
+AJAX Endpoints
+--------------
+
+1. POST /users/upload-avatar
+   Purpose: Upload profile picture
+   Request: multipart/form-data with image file
+   Response: {success: boolean, path: string, message: string}
+
+2. DELETE /users/delete-avatar
+   Purpose: Delete profile picture
+   Request: {_token}
+   Response: {success: boolean, message: string}
+
+---
+
+
+Middleware
+----------
+
+- AuthMiddleware: required
+- CSRF Middleware: required for all POST requests
+
+---
+
+
+Flash Messages
+--------------
+
+Success:
+- "Profile updated successfully"
+- "Password changed successfully"
+- "Profile picture updated successfully"
+- "Profile picture deleted successfully"
+- "Account deleted successfully"
+
+Error:
+- "Failed to update profile. Please try again."
+- "Current password is incorrect"
+- "New password must be different from current password"
+- "Failed to change password. Please try again."
+- "Invalid file type. Only JPG, PNG allowed."
+- "File size too large. Maximum 1MB allowed."
+- "Failed to upload profile picture. Please try again."
+- "You do not have permission to perform this action"
+
+---
+
+
+Routes
+------
+
+GET    /profile                     -> UserController@profile
+POST   /profile/update              -> UserController@updateProfile
+POST   /profile/change-password     -> UserController@changePassword
+POST   /profile/delete-account      -> UserController@deleteAccount
+POST   /users/upload-avatar         -> UserController@uploadAvatar (AJAX)
+DELETE /users/delete-avatar         -> UserController@deleteAvatar (AJAX)
+
+---
+
+
+Assets Used
+-----------
+
+CSS: assets/css/users.css
+JS:  assets/js/users.js
+
+---
+
+
+Validation Rules
+----------------
+
+Update Profile:
+- first_name: required|string|max:50
+- last_name: required|string|max:50
+- profile_picture: nullable|image|mimes:jpg,jpeg,png|max:1024
+
+Change Password:
+- current_password: required|string
+- new_password: required|string|min:6|different:current_password
+- confirm_password: required|string|same:new_password
+
+---
+
+
+Access Control
+--------------
+
+- Users can only edit their own profile
+- Users cannot edit other users' profiles
+- Username and email are read-only (change via settings if needed)
+- Email change requires verification (optional)
+
+---
+
+
+Email Change (Optional)
+-----------------------
+
+If implementing email change:
+   - Add email field to profile form
+   - Verify new email doesn't already exist
+   - Send verification email to new address
+   - Update email_verified_at after verification
+   - Keep old email until new one is verified
+
+---
+
+
+Account Statistics (Optional)
+------------------------------
+
+Show on profile page:
+   - Total Transactions: count
+   - Member Since: date
+   - Last Login: date/time
+   - Total Categories: count
+
+---
+
+
+Empty States
+------------
+
+- No transactions yet: "You haven't added any transactions yet."
+
+---
+
+
+IMPORTANT: Security Implementation Standards
+==============================================
+
+This module MUST follow these security practices in implementation:
+
+1. Prepared Statements: ALL database queries MUST use PDO prepared statements with bound parameters. Never concatenate user input into SQL queries.
+   Example: $stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = :user_id AND date >= :date_from");
+            $stmt->execute(['user_id' => $user_id, 'date_from' => $date_from]);
+
+2. Input Sanitization: ALL user inputs must be sanitized before validation and database insertion.
+   Example: $amount = filter_input(INPUT_POST, 'amount', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+            $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_SPECIAL_CHARS);
+
+3. Output Escaping: ALL dynamic content rendered in views MUST be escaped using htmlspecialchars() to prevent XSS.
+   Example: echo htmlspecialchars($transaction['description'], ENT_QUOTES, 'UTF-8');
+            echo htmlspecialchars($category['name'], ENT_QUOTES, 'UTF-8');
+
+4. Authorization Checks: Verify the logged-in user owns the resource before any operation.
+   Example: if ((int)$transaction['user_id'] !== (int)$_SESSION['user_id']) { http_response_code(403); exit('Forbidden'); }
+
+5. CSRF Protection: All POST/PUT/DELETE forms must include and validate CSRF tokens.
+   Example: if (!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) { http_response_code(403); exit('Invalid CSRF token'); }
+
+6. File Upload Security: Validate MIME type by extension and content, use random filenames, store outside web root if possible.
+   Example: $allowed = ['jpg','jpeg','png','gif'];
+            $ext = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, $allowed)) { reject; }
+
+---
+
+
+Testing Checklist
+-----------------
+
+- [ ] Profile page loads with correct user data
+- [ ] Update profile saves first and last name
+- [ ] Profile picture uploads successfully
+- [ ] Profile picture displays correctly
+- [ ] Old profile picture is deleted on update
+- [ ] Change password works with correct current password
+- [ ] Change password fails with wrong current password
+- [ ] Change password requires matching new passwords
+- [ ] Delete account shows confirmation modal
+- [ ] Delete account removes all user data
+- [ ] Delete account redirects to home page
+- [ ] Cannot edit other user's profile
+- [ ] CSRF protection works
+- [ ] Responsive design on mobile

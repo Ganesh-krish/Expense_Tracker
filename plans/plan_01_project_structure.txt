@@ -1,0 +1,108 @@
+Expense Tracker - Project Structure Plan
+==========================================
+
+expense_tracker/
+├── index.php
+├── .htaccess
+├── config/
+│   ├── config.php
+│   ├── database.php
+│   └── constants.php
+├── controllers/
+│   ├── DashboardController.php
+│   ├── AuthController.php
+│   ├── ExpenseController.php
+│   ├── IncomeController.php
+│   ├── CategoryController.php
+│   ├── ReportController.php
+│   ├── UserController.php
+│   └── SettingController.php
+├── models/
+│   ├── User.php
+│   ├── Expense.php
+│   ├── Income.php
+│   ├── Category.php
+│   ├── Transaction.php
+│   └── Setting.php
+├── views/
+│   ├── layouts/
+│   │   ├── header.php
+│   │   ├── footer.php
+│   │   ├── sidebar.php
+│   │   └── navbar.php
+│   ├── auth/
+│   │   ├── login.php
+│   │   └── register.php
+│   ├── dashboard/
+│   │   └── index.php
+│   ├── expenses/
+│   │   ├── index.php
+│   │   ├── create.php
+│   │   ├── edit.php
+│   │   └── list.php
+│   ├── incomes/
+│   │   ├── index.php
+│   │   ├── create.php
+│   │   ├── edit.php
+│   │   └── list.php
+│   ├── categories/
+│   │   ├── index.php
+│   │   ├── create.php
+│   │   ├── edit.php
+│   │   └── list.php
+│   ├── reports/
+│   │   ├── index.php
+│   │   ├── expense_report.php
+│   │   ├── income_report.php
+│   │   └── monthly_report.php
+│   ├── users/
+│   │   ├── index.php
+│   │   ├── profile.php
+│   │   └── settings.php
+│   └── partials/
+│       ├── modals/
+│       ├── alerts/
+│       └── pagination/
+├── assets/
+│   ├── css/
+│   │   ├── style.css
+│   │   ├── dashboard.css
+│   │   ├── auth.css
+│   │   └── responsive.css
+│   ├── js/
+│   │   ├── app.js
+│   │   ├── dashboard.js
+│   │   ├── expenses.js
+│   │   ├── incomes.js
+│   │   ├── categories.js
+│   │   ├── reports.js
+│   │   └── auth.js
+│   ├── images/
+│   │   ├── logo.png
+│   │   ├── icons/
+│   │   └── uploads/
+│   └── vendor/
+│       ├── bootstrap/
+│       ├── jquery/
+│       ├── chart.js/
+│       └── datatables/
+├── includes/
+│   ├── header.php
+│   ├── footer.php
+│   ├── sidebar.php
+│   ├── functions.php
+│   └── database.php
+├── middleware/
+│   ├── AuthMiddleware.php
+│   └── RoleMiddleware.php
+├── routes/
+│   └── web.php
+├── uploads/
+│   ├── receipts/
+│   └── avatars/
+├── logs/
+│   └── app.log
+└── plans/
+    ├── plan_01_project_structure.txt
+    ├── plan_02_modules.txt
+    └── plan_03_database_design.txt

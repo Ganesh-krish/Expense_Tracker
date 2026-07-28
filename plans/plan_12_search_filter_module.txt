@@ -1,0 +1,415 @@
+Expense Tracker - Module 9: Search & Filter Module Plan
+========================================================
+
+Module Name: Search & Filter
+File: plan_12_search_filter_module.txt
+
+---
+
+
+Overview
+--------
+Provides global search functionality and advanced filtering across all transactions.
+This module enhances the existing filtering in expense and income pages by adding
+a global search bar and advanced filter options.
+
+NOTE: Much of the filtering functionality is already covered in the Expense and
+Income modules. This plan focuses on the global search feature and advanced
+filter enhancements.
+
+---
+
+
+Pages / Views
+-------------
+
+1. Global Search Results Page
+   Path: views/search/index.php
+   Shows: search input, active filters, results table with tabs (All/Income/Expense)
+
+2. Advanced Filter Modal/Panel
+   Can be integrated into expense/income list pages or as a separate page
+   Shows: advanced filter options
+
+---
+
+
+Controllers
+-----------
+
+1. SearchController.php
+   Methods:
+   - index()        -> show search page with results
+   - advanced()     -> show advanced filter page
+   - search()       -> handle search query, return results
+
+---
+
+
+Models Used
+-----------
+
+1. Transaction.php
+   Methods:
+   - globalSearch($user_id, $query, $filters, $page, $perPage)
+   - getSearchCount($user_id, $query, $filters)
+   - advancedFilter($user_id, $filters, $page, $perPage)
+
+---
+
+
+Global Search Bar
+-----------------
+
+Location:
+   - Top navigation bar (navbar.php)
+   - Always visible when logged in
+   - Placeholder: "Search transactions..."
+
+Features:
+   - Real-time search with debounce (300ms delay)
+   - Minimum 2 characters to trigger search
+   - Shows dropdown with instant results (like Google suggestions)
+   - Press Enter to go to full search results page
+   - Clear button (X) to clear search
+   - Keyboard shortcut (Ctrl+K or /) to focus search
+
+Search Dropdown (Instant Results):
+   - Shows last 5 matching transactions
+   - Each result shows: date, description, category, amount
+   - Click result to view/edit transaction
+   - "View all results" link at bottom
+
+---
+
+
+Search Query Processing
+-----------------------
+
+Search fields (all matched with LIKE):
+   - Description
+   - Category name
+   - Amount (exact match if numeric)
+
+Example:
+   Query: "pizza"
+   Matches: "Pizza at Domino's", " dominos pizza", categories with "Food"
+
+Query: "50"
+   Matches: transactions with amount 50.00, descriptions containing "50"
+
+---
+
+
+Search Results Page
+-------------------
+
+URL: /search?q={query}
+
+Layout:
+   - Search bar at top (pre-filled with query)
+   - Active filters display
+   - Results tabs: All (default), Income, Expense
+   - Results table (same as expense/income list)
+   - Pagination
+   - No results message
+
+Results Table Columns:
+   - Date
+   - Type (Income/Expense badge)
+   - Description
+   - Category
+   - Amount (green for income, red for expense)
+   - Actions (view, edit, delete)
+
+---
+
+
+Advanced Filter Panel
+---------------------
+
+Trigger:
+   - "Advanced Filters" button on expense/income list pages
+   - Opens modal or slide-out panel
+
+Filter Options:
+
+1. Date Range
+   - Date From: date input
+   - Date To: date input
+   - Preset buttons: Today, This Week, This Month, Last Month, This Year
+
+2. Amount Range
+   - Min Amount: number input
+   - Max Amount: number input
+
+3. Categories
+   - Multi-select dropdown or checkboxes
+   - Options: all user categories (income + expense)
+   - Can select multiple
+
+4. Transaction Type
+   - Radio buttons: All, Income Only, Expense Only
+
+5. Description
+   - Text input for keyword search in description
+
+6. Sort Options
+   - Sort By: Date, Amount, Category
+   - Direction: Ascending, Descending
+
+7. Additional Filters (optional)
+   - Has Receipt: checkbox (for expenses)
+   - Is Recurring: checkbox
+   - Amount Greater Than
+   - Amount Less Than
+
+Apply/Reset:
+   - "Apply Filters" button
+   - "Reset" button (clears all filters)
+   - "Save Filter" button (save current filter set, optional)
+
+---
+
+
+Saved Filters (Optional)
+------------------------
+
+If implementing saved filters:
+   - Users can save frequently used filter combinations
+   - Saved filters list in a dropdown
+   - One-click apply
+   - Rename/delete saved filters
+
+Database (if using separate table):
+   Table: saved_filters
+   - id, user_id, name, filters (JSON), created_at
+
+---
+
+
+AJAX Endpoints
+--------------
+
+1. GET /search/suggestions
+   Purpose: Get instant search suggestions
+   Request: ?q={query}&limit=5
+   Response: JSON array of {id, type, description, amount, date}
+
+2. GET /search/results
+   Purpose: Get search results (for AJAX loading or infinite scroll)
+   Request: ?q={query}&page=1&per_page=10&type=all|income|expense
+   Response: JSON with transactions, pagination info
+
+3. POST /search/advanced
+   Purpose: Apply advanced filters
+   Request: JSON or form data with all filter values
+   Response: JSON with filtered results
+
+4. GET /search/categories
+   Purpose: Get all categories for filter dropdown
+   Response: JSON array of {id, name, type, color}
+
+---
+
+
+Filter Persistence
+------------------
+
+- Remember filters in session or URL parameters
+- When user returns to expense/income page, restore previous filters
+- Clear filters when user clicks "Reset" or navigates away
+
+URL Parameters:
+   - date_from, date_to
+   - category_id
+   - amount_from, amount_to
+   - search
+   - type
+   - sort, direction
+   - page, per_page
+
+---
+
+
+Middleware
+----------
+
+- AuthMiddleware: required
+- CSRF Middleware: required for POST requests
+
+---
+
+
+Validation Rules
+----------------
+
+Search:
+- q: nullable|string|max:100
+- type: nullable|in:all,income,expense
+- page: nullable|integer|min:1
+- per_page: nullable|integer|in:10,25,50,100
+
+Advanced Filters:
+- date_from: nullable|date
+- date_to: nullable|date|after_or_equal:date_from
+- amount_from: nullable|numeric|min:0
+- amount_to: nullable|numeric|min:0|gte:amount_from
+- category_ids: nullable|array|exists:categories,id
+- type: nullable|in:all,income,expense
+- description: nullable|string|max:100
+- sort: nullable|in:date,amount,category
+- direction: nullable|in:asc,desc
+
+---
+
+
+Flash Messages
+--------------
+
+Info:
+- "Showing results for: {query}"
+- "No results found for: {query}"
+- "Filters applied successfully"
+- "Filters cleared"
+
+Error:
+- "Search query too short. Please enter at least 2 characters."
+- "Invalid search query."
+- "Failed to apply filters. Please try again."
+
+---
+
+
+Routes
+------
+
+GET    /search                      -> SearchController@index
+GET    /search/suggestions          -> SearchController@suggestions (AJAX)
+GET    /search/results              -> SearchController@results (AJAX)
+POST   /search/advanced             -> SearchController@advanced (AJAX)
+GET    /search/categories           -> SearchController@getCategories (AJAX)
+
+---
+
+
+Assets Used
+-----------
+
+CSS: assets/css/search.css
+JS:  assets/js/search.js
+
+---
+
+
+Keyboard Shortcuts
+------------------
+
+- Press "/" or "Ctrl+K" to focus search bar
+- Press "Escape" to close search dropdown or modal
+- Press "Enter" to submit search
+
+---
+
+
+Search Performance
+------------------
+
+- Use FULLTEXT index on description column (optional, for large datasets)
+- Limit instant suggestions to 5 results
+- Use pagination for search results
+- Cache frequent searches (optional)
+
+Database Indexes:
+   - transactions(user_id, type, date)
+   - transactions(user_id, amount)
+   - categories(user_id, name)
+
+---
+
+
+Empty States
+------------
+
+- No search query: "Start typing to search your transactions"
+- No results: "No transactions found matching your search. Try different keywords."
+- No filters selected: "Use the filters above to narrow down your results"
+
+---
+
+
+Access Control
+--------------
+
+- All authenticated users can search their own transactions
+- Users can only see their own transaction data
+- Search is scoped to logged-in user's data
+
+---
+
+
+Integration Points
+-------------------
+
+- Search bar in navbar (available on all pages)
+- Expense list page uses same filters
+- Income list page uses same filters
+- Dashboard recent transactions can be filtered
+- Reports can use same date range filters
+
+---
+
+
+IMPORTANT: Security Implementation Standards
+==============================================
+
+This module MUST follow these security practices in implementation:
+
+1. Prepared Statements: ALL database queries MUST use PDO prepared statements with bound parameters. Never concatenate user input into SQL queries.
+   Example: $stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = :user_id AND date >= :date_from");
+            $stmt->execute(['user_id' => $user_id, 'date_from' => $date_from]);
+
+2. Input Sanitization: ALL user inputs must be sanitized before validation and database insertion.
+   Example: $amount = filter_input(INPUT_POST, 'amount', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+            $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_SPECIAL_CHARS);
+
+3. Output Escaping: ALL dynamic content rendered in views MUST be escaped using htmlspecialchars() to prevent XSS.
+   Example: echo htmlspecialchars($transaction['description'], ENT_QUOTES, 'UTF-8');
+            echo htmlspecialchars($category['name'], ENT_QUOTES, 'UTF-8');
+
+4. Authorization Checks: Verify the logged-in user owns the resource before any operation.
+   Example: if ((int)$transaction['user_id'] !== (int)$_SESSION['user_id']) { http_response_code(403); exit('Forbidden'); }
+
+5. CSRF Protection: All POST/PUT/DELETE forms must include and validate CSRF tokens.
+   Example: if (!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) { http_response_code(403); exit('Invalid CSRF token'); }
+
+6. File Upload Security: Validate MIME type by extension and content, use random filenames, store outside web root if possible.
+   Example: $allowed = ['jpg','jpeg','png','gif'];
+            $ext = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, $allowed)) { reject; }
+
+---
+
+
+Testing Checklist
+-----------------
+
+- [ ] Global search bar visible in navbar
+- [ ] Typing in search shows instant suggestions (after 2 chars)
+- [ ] Suggestions show relevant transactions
+- [ ] Clicking suggestion navigates to transaction
+- [ ] Pressing Enter shows full search results page
+- [ ] Search results show correct transactions
+- [ ] Tabs (All/Income/Expense) filter results correctly
+- [ ] Advanced filter modal opens and closes
+- [ ] Date range filter works
+- [ ] Amount range filter works
+- [ ] Category multi-select filter works
+- [ ] Type filter (income/expense) works
+- [ ] Sort options work
+- [ ] Filters persist in URL
+- [ ] Reset button clears all filters
+- [ ] Keyboard shortcuts work (/ and Ctrl+K)
+- [ ] CSRF protection works
+- [ ] Responsive design on mobile
+- [ ] Search is scoped to current user only

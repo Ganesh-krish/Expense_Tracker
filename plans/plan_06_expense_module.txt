@@ -1,0 +1,383 @@
+Expense Tracker - Module 3: Expense Management Module Plan
+============================================================
+
+Module Name: Expense Management
+File: plan_06_expense_module.txt
+
+---
+
+
+Overview
+--------
+Allows users to create, view, edit, delete, and search their expense transactions.
+Users can attach receipt images to expenses and filter expenses by date, category, and amount.
+
+---
+
+
+Pages / Views
+-------------
+
+1. Expense List Page
+   Path: views/expenses/index.php (or list.php)
+   Shows: filter form, expense table, pagination
+
+2. Create Expense Page
+   Path: views/expenses/create.php
+   Shows: expense creation form with all fields
+
+3. Edit Expense Page
+   Path: views/expenses/edit.php
+   Shows: pre-filled form to edit an existing expense
+
+---
+
+
+Controllers
+-----------
+
+1. ExpenseController.php
+   Methods:
+   - index()        -> show list page with filters and pagination
+   - create()       -> show create form
+   - store()        -> handle POST, validate, save expense
+   - edit($id)      -> show edit form with pre-filled data
+   - update($id)    -> handle PUT/PATCH, validate, update expense
+   - destroy($id)   -> delete expense
+   - getCategories() -> AJAX: get expense categories for dropdown
+
+---
+
+
+Models Used
+-----------
+
+1. Transaction.php
+   Methods:
+   - createExpense($user_id, $data)
+   - updateExpense($id, $user_id, $data)
+   - deleteExpense($id, $user_id)
+   - findById($id, $user_id)
+   - getAllExpenses($user_id, $filters, $page, $perPage)
+   - getExpenseCount($user_id, $filters)
+
+2. Category.php
+   Methods:
+   - getExpenseCategories($user_id)
+   - getById($user_id, $id)
+
+---
+
+
+Expense List Page Details
+--------------------------
+
+Filter Form (top of page):
+   - Date From: date input
+   - Date To: date input
+   - Category: dropdown (all expense categories)
+   - Amount From: number input
+   - Amount To: number input
+   - Search: text input (search in description)
+   - Reset Filters button
+   - Apply Filters button
+
+Table Columns:
+   - Checkbox (for bulk delete, optional)
+   - Date
+   - Description
+   - Category (with color indicator)
+   - Amount (red color, formatted)
+   - Receipt (icon/link if image exists)
+   - Actions: Edit button, Delete button
+
+Features:
+   - Sortable columns (click header to sort by date/amount/category)
+   - Pagination (10, 25, 50, 100 per page options)
+   - "Add New Expense" button at top
+   - Empty state: "No expenses found. Add your first expense!"
+   - Bulk delete with confirmation (optional)
+   - Export selected/filtered to CSV (optional)
+
+---
+
+
+Create Expense Page Details
+----------------------------
+
+Form Fields:
+   - Amount: number input, required, min 0.01, step 0.01
+   - Category: dropdown, required, populated with user's expense categories
+   - Date: date input, required, default today's date
+   - Description: textarea, optional, max 500 chars
+   - Receipt Image: file input, accept image/*, optional
+     - Preview shown after selection
+     - Max file size: 2MB
+     - Allowed types: jpg, jpeg, png, gif
+     - Upload to uploads/receipts/ with unique filename
+   - Submit button
+   - Cancel button (redirects to expense list)
+
+Validation:
+   - Amount: required, numeric, > 0
+   - Category: required, must be an expense category owned by user
+   - Date: required, valid date, cannot be future date (optional)
+   - Description: max 500 chars, optional
+   - Receipt: file type check, file size check
+
+Success: Redirect to expense list with success flash message
+Failure: Redirect back with errors, retain form data
+
+---
+
+
+Edit Expense Page Details
+--------------------------
+
+Same form as create, pre-filled with existing data:
+   - Load expense by id and user_id
+   - Show 404 if not found or not owned by user
+   - Pre-fill all fields
+   - Show current receipt image if exists (with delete option)
+   - Submit button says "Update Expense"
+   - Delete button at bottom (with confirmation modal)
+
+Validation:
+   - Same as create
+   - Category can be changed to any expense category
+
+Success: Redirect to expense list with success flash message
+Failure: Redirect back with errors
+
+---
+
+
+AJAX Endpoints
+--------------
+
+1. GET /expenses/categories
+   Purpose: Get expense categories for dropdown
+   Response: JSON array of {id, name, color}
+
+2. POST /expenses/upload-receipt
+   Purpose: Upload receipt image
+   Request: multipart/form-data with image file
+   Response: {success: boolean, path: string, message: string}
+   Validation: file type, file size (2MB max)
+
+3. DELETE /expenses/delete-receipt
+   Purpose: Delete receipt image from server
+   Request: {transaction_id}
+   Response: {success: boolean, message: string}
+
+---
+
+
+Bulk Actions (Optional)
+-----------------------
+
+1. Bulk Delete
+   - Checkbox column in table
+   - "Delete Selected" button
+   - Confirmation modal showing count of selected items
+   - Delete all selected expenses and their receipt images
+
+---
+
+
+File Upload Details
+-------------------
+
+Storage: uploads/receipts/
+Naming: expense_{timestamp}_{random}.{ext}
+   Example: expense_1657891234_a1b2c3d4.jpg
+Permissions: 0644
+Old file cleanup: delete old receipt when updating or deleting expense
+
+Image Processing (Optional):
+   - Create thumbnail version (200x200) for table view
+   - Compress image if too large
+   - Store both original and thumbnail
+
+---
+
+
+Middleware
+----------
+
+- AuthMiddleware: required
+- CSRF Middleware: required for all POST requests
+
+---
+
+
+Validation Rules
+----------------
+
+Store/Update:
+- amount: required|numeric|min:0.01
+- category_id: required|exists:categories,id|type:expense
+- date: required|date|before_or_equal:today (optional)
+- description: nullable|string|max:500
+- receipt: nullable|image|mimes:jpg,jpeg,png,gif|max:2048 (2MB)
+
+---
+
+
+Flash Messages
+--------------
+
+Success:
+- "Expense added successfully"
+- "Expense updated successfully"
+- "Expense deleted successfully"
+- "Receipt uploaded successfully"
+- "Receipt deleted successfully"
+
+Error:
+- "Failed to add expense. Please try again."
+- "Failed to update expense. Please try again."
+- "Failed to delete expense. Please try again."
+- "Invalid file type. Only JPG, PNG, GIF allowed."
+- "File size too large. Maximum 2MB allowed."
+- "You do not have permission to perform this action"
+
+---
+
+
+Routes
+------
+
+GET    /expenses                    -> ExpenseController@index
+GET    /expenses/create             -> ExpenseController@create
+POST   /expenses                    -> ExpenseController@store
+GET    /expenses/{id}/edit          -> ExpenseController@edit
+PUT    /expenses/{id}               -> ExpenseController@update
+DELETE /expenses/{id}               -> ExpenseController@destroy
+GET    /expenses/categories         -> ExpenseController@getCategories (AJAX)
+POST   /expenses/upload-receipt     -> ExpenseController@uploadReceipt (AJAX)
+DELETE /expenses/delete-receipt     -> ExpenseController@deleteReceipt (AJAX)
+
+---
+
+
+Assets Used
+-----------
+
+CSS: assets/css/expenses.css
+JS:  assets/js/expenses.js
+
+---
+
+
+Query Parameters for Filtering
+-------------------------------
+
+- date_from: YYYY-MM-DD
+- date_to: YYYY-MM-DD
+- category_id: integer
+- amount_from: decimal
+- amount_to: decimal
+- search: string
+- sort: date|amount|category (default: date)
+- direction: asc|desc (default: desc)
+- page: integer (default: 1)
+- per_page: 10|25|50|100 (default: 10)
+
+---
+
+
+Sorting Behavior
+----------------
+
+Default: Sort by date descending (newest first)
+Options:
+- Click "Date" header: toggle asc/desc
+- Click "Amount" header: toggle asc/desc
+- Click "Category" header: sort alphabetically
+
+---
+
+
+Pagination Details
+------------------
+
+- Show: "Showing 1-10 of 45 results"
+- Page numbers with prev/next
+- Current page highlighted
+- Disabled prev on first page, disabled next on last page
+- Preserve filter parameters in pagination links
+
+---
+
+
+Empty States
+------------
+
+- No expenses at all: "You have no expenses yet. Start tracking by adding your first expense!"
+- No expenses match filters: "No expenses match your filters. Try adjusting your search criteria."
+- No categories: "No expense categories found. Please create categories first."
+
+---
+
+
+Access Control
+--------------
+
+- All authenticated users can manage their own expenses
+- Users cannot view/edit/delete other users' expenses
+- Soft delete or hard delete (recommended: hard delete with cascade)
+
+---
+
+
+IMPORTANT: Security Implementation Standards
+==============================================
+
+This module MUST follow these security practices in implementation:
+
+1. Prepared Statements: ALL database queries MUST use PDO prepared statements with bound parameters. Never concatenate user input into SQL queries.
+   Example: $stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = :user_id AND date >= :date_from");
+            $stmt->execute(['user_id' => $user_id, 'date_from' => $date_from]);
+
+2. Input Sanitization: ALL user inputs must be sanitized before validation and database insertion.
+   Example: $amount = filter_input(INPUT_POST, 'amount', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+            $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_SPECIAL_CHARS);
+
+3. Output Escaping: ALL dynamic content rendered in views MUST be escaped using htmlspecialchars() to prevent XSS.
+   Example: echo htmlspecialchars($transaction['description'], ENT_QUOTES, 'UTF-8');
+            echo htmlspecialchars($category['name'], ENT_QUOTES, 'UTF-8');
+
+4. Authorization Checks: Verify the logged-in user owns the resource before any operation.
+   Example: if ((int)$transaction['user_id'] !== (int)$_SESSION['user_id']) { http_response_code(403); exit('Forbidden'); }
+
+5. CSRF Protection: All POST/PUT/DELETE forms must include and validate CSRF tokens.
+   Example: if (!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) { http_response_code(403); exit('Invalid CSRF token'); }
+
+6. File Upload Security: Validate MIME type by extension and content, use random filenames, store outside web root if possible.
+   Example: $allowed = ['jpg','jpeg','png','gif'];
+            $ext = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, $allowed)) { reject; }
+
+---
+
+
+Testing Checklist
+-----------------
+
+- [ ] Expense list loads with all expenses
+- [ ] Filters work correctly (date, category, amount, search)
+- [ ] Sorting works (date, amount, category)
+- [ ] Pagination works and preserves filters
+- [ ] Create expense form validates correctly
+- [ ] Expense is created and redirects to list
+- [ ] Receipt image uploads successfully
+- [ ] Receipt image displays in table and edit form
+- [ ] Edit expense pre-fills all fields correctly
+- [ ] Update expense saves changes
+- [ ] Delete expense removes record and receipt
+- [ ] Cannot view/edit/delete other user's expense
+- [ ] Bulk delete works (if implemented)
+- [ ] CSRF protection works
+- [ ] XSS prevention in description field
+- [ ] Responsive design on mobile

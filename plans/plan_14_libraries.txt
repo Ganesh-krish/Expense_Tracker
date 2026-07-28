@@ -1,0 +1,372 @@
+Expense Tracker - Required Libraries & Dependencies Plan
+=========================================================
+
+Module Name: Libraries & Dependencies
+File: plan_14_libraries.txt
+
+---
+
+
+Overview
+--------
+This file lists all external libraries, frameworks, and tools required for the project.
+All libraries should be included locally in the assets/vendor/ directory or loaded via CDN.
+For PHP libraries, use Composer if available, otherwise include manually.
+
+---
+
+
+Frontend Libraries
+------------------
+
+1. Bootstrap 5 (or Bootstrap 4)
+   Purpose: CSS framework for responsive layout, components, grid system
+   Version: 5.3.x (recommended) or 4.6.x
+   Files needed:
+     - CSS: bootstrap.min.css
+     - JS: bootstrap.bundle.min.js (includes Popper.js)
+   Usage: Navbar, sidebar, forms, buttons, modals, cards, tables, alerts, dropdowns
+   CDN: https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css
+   Local: assets/vendor/bootstrap/
+
+2. jQuery
+   Purpose: DOM manipulation, AJAX requests, event handling
+   Version: 3.7.x
+   Files needed:
+     - JS: jquery.min.js
+   Usage: All AJAX calls, form handling, dynamic UI updates
+   CDN: https://code.jquery.com/jquery-3.7.0.min.js
+   Local: assets/vendor/jquery/
+
+3. Chart.js
+   Purpose: Render charts for dashboard and reports (pie, bar, line charts)
+   Version: 4.4.x
+   Files needed:
+     - JS: chart.min.js
+   Usage: Dashboard expense breakdown, income vs expense trends, monthly comparison
+   CDN: https://cdn.jsdelivr.net/npm/chart.js
+   Local: assets/vendor/chart.js/
+
+4. Bootstrap Icons (or Font Awesome)
+   Purpose: Icon library for UI elements
+   Version: 1.11.x (Bootstrap Icons) or 6.5.x (Font Awesome)
+   Files needed:
+     - CSS: bootstrap-icons.css or all.min.css
+   Usage: Navigation icons, action buttons, category icons, status indicators
+   CDN: https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css
+   Local: assets/vendor/bootstrap-icons/ or assets/vendor/fontawesome/
+
+5. DataTables (Optional but Recommended)
+   Purpose: Enhanced HTML tables with sorting, searching, pagination
+   Version: 2.0.x
+   Files needed:
+     - CSS: jquery.dataTables.min.css, dataTables.bootstrap5.min.css
+     - JS: jquery.dataTables.min.js, dataTables.bootstrap5.min.js
+   Usage: Expense list, income list, reports transaction tables
+   CDN: https://cdn.datatables.net/2.0.0/css/dataTables.bootstrap5.css
+   Local: assets/vendor/datatables/
+
+---
+
+
+Backend PHP Libraries
+---------------------
+
+1. Firebase PHP JWT
+   Purpose: Generate and validate JSON Web Tokens for API authentication
+   Version: 6.10.x
+   Package: firebase/php-jwt
+   Installation: composer require firebase/php-jwt
+   Usage: AuthController login (generate JWT), AuthMiddleware (validate JWT)
+   Notes:
+     - Store JWT secret key in config.php as JWT_SECRET
+     - Use HS256 algorithm
+     - Set expiration to 1 hour for access tokens
+
+2. PHPMailer (Optional)
+   Purpose: Send emails for password reset, notifications, reports
+   Version: 6.9.x
+   Package: phpmailer/phpmailer
+   Installation: composer require phpmailer/phpmailer
+   Usage:
+     - Forgot password email with reset link
+     - Weekly/monthly summary emails (if notifications enabled)
+   Alternative: PHP mail() function (simpler but less reliable)
+
+3. Dompdf (Optional, for PDF export)
+   Purpose: Generate PDF reports from HTML
+   Version: 3.0.x
+   Package: dompdf/dompdf
+   Installation: composer require dompdf/dompdf
+   Usage: ReportController exportPdf() method
+   Alternative: TCPDF or mPDF
+
+4. League CSV (Optional, for CSV export)
+   Purpose: Read and write CSV files
+   Version: 9.10.x
+   Package: league/csv
+   Installation: composer require league/csv
+   Usage: ReportController exportCsv() method, Settings export
+   Alternative: PHP fputcsv() (built-in, simpler)
+
+---
+
+
+Development Tools
+-----------------
+
+1. Composer
+   Purpose: PHP dependency manager
+   Usage: Install and manage PHP libraries
+   Command: composer install
+
+2. Xdebug (Optional)
+   Purpose: Debugging and profiling
+   Usage: Step-through debugging during development
+
+3. PHPUnit (Optional)
+   Purpose: Unit testing
+   Usage: Test models, controllers, validation logic
+
+---
+
+
+Browser Support
+---------------
+
+- Chrome (last 2 versions)
+- Firefox (last 2 versions)
+- Safari (last 2 versions)
+- Edge (last 2 versions)
+- Mobile browsers (iOS Safari, Chrome Mobile)
+
+---
+
+
+CDN vs Local Files
+-------------------
+
+Recommendation: Use local files for production, CDN for development
+
+Local (Production):
+   - Download all vendor files to assets/vendor/
+   - Reference with relative paths
+   - Benefits: faster load, no external dependency, works offline
+
+CDN (Development):
+   - Use CDN links for faster setup
+   - Benefits: no local files needed, automatic updates, caching across sites
+
+Hybrid Approach:
+   - Use CDN for Bootstrap, jQuery, Chart.js
+   - Use local for custom CSS/JS
+   - Fallback to local if CDN fails (optional)
+
+---
+
+
+Asset Loading Strategy
+----------------------
+
+1. CSS (in header.php)
+   - Bootstrap CSS
+   - Bootstrap Icons CSS
+   - Custom style.css
+   - Page-specific CSS (dashboard.css, expenses.css, etc.)
+   - Responsive.css (media queries)
+
+2. JS (in footer.php)
+   - jQuery
+   - Bootstrap JS bundle
+   - Chart.js (if page uses charts)
+   - DataTables JS (if page uses tables)
+   - Custom app.js
+   - Page-specific JS (dashboard.js, expenses.js, etc.)
+
+---
+
+
+Constants.php Details
+---------------------
+
+File: config/constants.php
+Purpose: Centralize all constants used across the application
+
+Categories:
+
+1. Database Constants
+   - DB_HOST
+   - DB_NAME
+   - DB_USER
+   - DB_PASS
+   - DB_CHARSET
+
+2. Table Name Constants
+   - TABLE_USERS
+   - TABLE_CATEGORIES
+   - TABLE_TRANSACTIONS
+   - TABLE_BUDGETS
+   - TABLE_SETTINGS
+   - TABLE_PASSWORD_RESETS
+
+3. Transaction Type Constants
+   - TRANSACTION_TYPE_INCOME = 1
+   - TRANSACTION_TYPE_EXPENSE = 2
+
+4. Category Type Constants
+   - CATEGORY_TYPE_INCOME = 1
+   - CATEGORY_TYPE_EXPENSE = 2
+
+5. User Role Constants
+   - ROLE_USER = 1
+   - ROLE_ADMIN = 2
+
+6. Recurring Frequency Constants
+   - RECURRING_DAILY = 1
+   - RECURRING_WEEKLY = 2
+   - RECURRING_MONTHLY = 3
+   - RECURRING_YEARLY = 4
+
+7. Status Constants
+   - STATUS_ACTIVE = 1
+   - STATUS_INACTIVE = 0
+
+8. Boolean Constants
+   - BOOLEAN_TRUE = 1
+   - BOOLEAN_FALSE = 0
+
+9. Pagination Constants
+   - ITEMS_PER_PAGE = 10
+   - ITEMS_PER_PAGE_OPTIONS = [10, 25, 50, 100]
+
+10. File Upload Constants
+    - MAX_FILE_SIZE = 2048 (KB)
+    - ALLOWED_IMAGE_TYPES = ['jpg', 'jpeg', 'png', 'gif']
+    - UPLOAD_DIR_RECEIPTS = 'uploads/receipts/'
+    - UPLOAD_DIR_AVATARS = 'uploads/avatars/'
+
+11. Security Constants
+    - PASSWORD_MIN_LENGTH = 6
+    - CSRF_TOKEN_LENGTH = 32
+    - REMEMBER_TOKEN_LENGTH = 60
+    - SESSION_LIFETIME = 86400 (24 hours in seconds)
+    - JWT_SECRET (from config.php, not in constants.php for security)
+
+12. Currency Constants
+    - DEFAULT_CURRENCY = 'USD'
+    - AVAILABLE_CURRENCIES = ['USD', 'EUR', 'GBP', 'INR', 'JPY', 'CAD', 'AUD']
+
+13. Date Format Constants
+    - DEFAULT_DATE_FORMAT = 'Y-m-d'
+    - AVAILABLE_DATE_FORMATS = ['Y-m-d', 'd-m-Y', 'm-d-Y', 'd/m/Y', 'm/d/Y']
+
+14. Flash Message Constants
+    - FLASH_SUCCESS = 'success'
+    - FLASH_ERROR = 'error'
+    - FLASH_WARNING = 'warning'
+    - FLASH_INFO = 'info'
+
+Usage Example:
+   require_once '../config/constants.php';
+   $type = TRANSACTION_TYPE_INCOME; // 1
+   $role = ROLE_ADMIN; // 2
+
+---
+
+
+Composer.json (if using Composer)
+----------------------------------
+
+{
+    "name": "expense-tracker/app",
+    "description": "Personal Expense Tracker Application",
+    "require": {
+        "php": ">=8.0",
+        "firebase/php-jwt": "^6.10",
+        "phpmailer/phpmailer": "^6.9",
+        "dompdf/dompdf": "^3.0",
+        "league/csv": "^9.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    }
+}
+
+---
+
+
+File Size Estimates (Local Vendor)
+-----------------------------------
+
+Bootstrap CSS: ~200 KB (minified)
+Bootstrap JS: ~70 KB (minified)
+jQuery: ~85 KB (minified)
+Chart.js: ~200 KB (minified)
+Bootstrap Icons: ~100 KB (CSS + fonts)
+DataTables: ~100 KB (JS + CSS)
+
+Total: ~755 KB (can be reduced by using CDN and compressing)
+
+---
+
+
+Performance Optimization
+------------------------
+
+1. Minify all CSS and JS files
+2. Combine CSS files into one stylesheet
+3. Combine JS files into one script (except page-specific)
+4. Enable gzip compression on server
+5. Set proper cache headers for static assets
+6. Lazy load Chart.js only on pages that need charts
+7. Use image sprites for icons (or icon font)
+8. Compress images in uploads directory
+
+---
+
+
+Security Libraries Notes
+------------------------
+
+1. JWT Library (firebase/php-jwt)
+   - Use strong secret key (32+ characters)
+   - Validate expiration and issuer claims
+   - Store refresh tokens hashed in database
+
+2. Password Hashing
+   - Use PHP built-in password_hash() with PASSWORD_BCRYPT or PASSWORD_DEFAULT
+   - Cost factor: 10-12 (default is fine for most cases)
+   - Never use MD5, SHA1, or plain text
+
+3. CSRF Protection
+   - Generate token with random_bytes() or bin2hex()
+   - Store in session
+   - Validate with hash_equals() to prevent timing attacks
+
+4. Input Validation
+   - Use PHP filter_var() for sanitization
+   - Use custom validation or Respect/Validation library (optional)
+   - Always validate on server side (never trust client-side only)
+
+---
+
+
+Testing Checklist
+-----------------
+
+- [ ] All CSS files load correctly
+- [ ] All JS files load without errors
+- [ ] Bootstrap components render correctly
+- [ ] jQuery AJAX calls work
+- [ ] Chart.js renders charts on dashboard and reports
+- [ ] DataTables enhances tables (if used)
+- [ ] Bootstrap Icons display correctly
+- [ ] JWT library generates valid tokens
+- [ ] JWT tokens validate correctly
+- [ ] PHPMailer sends emails (if used)
+- [ ] Dompdf generates PDF (if used)
+- [ ] League CSV exports data (if used)
+- [ ] All vendor files are included in project
+- [ ] CDN fallback works (if implemented)

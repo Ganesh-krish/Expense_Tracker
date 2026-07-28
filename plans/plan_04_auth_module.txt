@@ -1,0 +1,380 @@
+Expense Tracker - Module 1: Authentication Module Plan
+========================================================
+
+Module Name: Authentication
+File: plan_04_auth_module.txt
+
+---
+
+
+Overview
+--------
+Handles user registration, login, logout, password reset, and session management.
+This is the entry point for all users. Guests can only access login/register pages.
+Authenticated users are redirected to the dashboard.
+
+---
+
+
+Pages / Views
+-------------
+
+1. Login Page
+   Path: views/auth/login.php
+   Fields: email, password, remember_me checkbox, submit button
+   Link to register page and forgot password link
+   Validation: email format, password required
+   On success: redirect to dashboard
+   On failure: show error message, retain email value
+
+2. Register Page
+   Path: views/auth/register.php
+   Fields: username, email, password, confirm_password, submit button
+   Validation: all fields required, email unique, password min 6 chars, passwords match
+   On success: auto-login and redirect to dashboard
+   On failure: show errors, retain entered values
+
+3. Forgot Password Page
+   Path: views/auth/forgot_password.php
+   Fields: email, submit button
+   On success: show message "if email exists, reset link sent"
+   On failure: show error
+
+4. Reset Password Page
+   Path: views/auth/reset_password.php
+   Fields: password, confirm_password, hidden token, submit button
+   Validation: password min 6 chars, passwords match, token valid and not expired
+   On success: redirect to login with success message
+
+---
+
+
+Controllers
+-----------
+
+1. AuthController.php
+   Methods:
+   - showLogin()           -> render login view
+   - login()               -> handle POST login, validate, create session
+   - showRegister()        -> render register view
+   - register()            -> handle POST register, validate, create user, login
+   - logout()              -> destroy session, redirect to login
+   - showForgotPassword()  -> render forgot password view
+   - forgotPassword()      -> handle POST, generate token, send email
+   - showResetPassword()   -> render reset password view with token
+   - resetPassword()       -> handle POST, validate token, update password
+
+---
+
+
+Models
+------
+
+1. User.php
+   Properties: id, username, email, password, first_name, last_name, profile_picture, currency, date_format, email_notifications, remember_token, email_verified_at, role, created_at, updated_at
+   Methods:
+   - findByEmail($email)
+   - findById($id)
+   - create($data)
+   - update($id, $data)
+   - delete($id)
+   - verifyPassword($password, $hash)
+   - generateRememberToken()
+   - validateResetToken($token)
+   - isEmailVerified()
+   - hasRole($role)
+   - generateJwt()
+   - validateJwt($token)
+
+---
+
+
+JWT Authentication
+------------------
+
+Library: firebase/php-jwt (via Composer) or custom implementation
+Secret Key: Store in config.php as JWT_SECRET (never commit to version control)
+
+JWT Payload:
+   - sub: user_id
+   - email: user_email
+   - role: user_role
+   - iat: issued at timestamp
+   - exp: expiration timestamp (e.g., 24 hours)
+
+JWT Storage Options:
+   Option A: localStorage (simpler, vulnerable to XSS)
+   Option B: httpOnly cookie (more secure, requires server-side validation)
+
+JWT Headers:
+   Authorization: Bearer {token}
+
+Refresh Token Flow:
+   - Access token: short-lived (15 min - 1 hour)
+   - Refresh token: long-lived (7 days - 30 days)
+   - Store refresh token in database (password_resets table or separate table)
+   - Use refresh token to get new access token without re-login
+
+JWT Endpoints:
+   POST /auth/login          -> return JWT token
+   POST /auth/refresh        -> refresh access token using refresh token
+   POST /auth/logout         -> invalidate refresh token
+
+---
+
+
+Role-Based Access
+-----------------
+
+User Roles:
+   - user: Standard user, can access all own data
+   - admin: Administrator, can manage all users (if multi-user admin panel added later)
+
+Default Role:
+   - All new registrations get 'user' role
+
+Role Column:
+   - Column: role (ENUM: 'user', 'admin', Default 'user')
+   - Database: users.role
+
+Authorization Middleware:
+   - AuthMiddleware: checks if user is authenticated (JWT valid or session exists)
+   - RoleMiddleware: checks if user has required role
+     Example: RoleMiddleware@admin checks if user.role === 'admin'
+
+Current App Scope:
+   - Only 'user' role needed for this expense tracker
+   - Admin role reserved for future admin panel
+
+---
+
+
+Database Tables Used
+--------------------
+
+1. users
+   Columns used: id, username, email, password, remember_token, email_verified_at, created_at, updated_at
+
+2. password_resets
+   Columns used: email, token, created_at
+   Logic: token expires after 1 hour, delete used/expired tokens
+
+---
+
+
+AJAX Endpoints
+--------------
+
+1. POST /auth/check-email
+   Purpose: Check if email already exists during registration
+   Request: {email: string}
+   Response: {exists: boolean}
+
+2. POST /auth/check-username
+   Purpose: Check if username already exists during registration
+   Request: {username: string}
+   Response: {exists: boolean}
+
+---
+
+
+Middleware
+----------
+
+1. AuthMiddleware.php
+   - check(): If user not logged in, redirect to login
+   - guest(): If user already logged in, redirect to dashboard
+
+---
+
+
+Session Variables
+-----------------
+
+- user_id          -> logged in user ID
+- user_name        -> logged in user username
+- user_email       -> logged in user email
+- flash_success    -> success message for next request
+- flash_error      -> error message for next request
+
+---
+
+
+Validation Rules
+----------------
+
+Registration:
+- username: required, min 3, max 50, unique, alphanumeric
+- email: required, valid email, max 100, unique
+- password: required, min 6, max 255
+- confirm_password: required, same as password
+
+Login:
+- email: required, valid email
+- password: required
+
+Forgot Password:
+- email: required, valid email
+
+Reset Password:
+- password: required, min 6
+- confirm_password: required, same as password
+- token: required, valid, not expired
+
+---
+
+
+Security Considerations
+-----------------------
+
+1. Passwords hashed with password_hash() (bcrypt by default)
+2. CSRF token on all POST forms
+3. SQL injection prevention using prepared statements
+4. XSS prevention by escaping output with htmlspecialchars()
+5. Rate limiting on login attempts (optional, store failed attempts in session or DB)
+6. Remember me token stored in DB and cookie, random string
+7. Password reset token stored hashed in DB (optional extra security)
+8. Session regeneration on login to prevent session fixation
+9. Secure cookie flags (httponly, secure in production)
+
+---
+
+
+IMPORTANT: Security Implementation Standards
+==============================================
+
+This module MUST follow these security practices in implementation:
+
+1. Prepared Statements: ALL database queries MUST use PDO prepared statements with bound parameters. Never concatenate user input into SQL queries.
+   Example: $stmt = $pdo->prepare("SELECT * FROM users WHERE email = :email");
+            $stmt->execute(['email' => $email]);
+
+2. Input Sanitization: ALL user inputs must be sanitized before validation and database insertion.
+   Example: $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
+            $password = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_STRING);
+
+3. Output Escaping: ALL dynamic content rendered in views MUST be escaped using htmlspecialchars() to prevent XSS.
+   Example: echo htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8');
+            echo htmlspecialchars($error_message, ENT_QUOTES, 'UTF-8');
+
+4. Authorization Checks: Verify the logged-in user owns the resource before any operation.
+   Example: if ((int)$user['id'] !== (int)$_SESSION['user_id']) { http_response_code(403); exit('Forbidden'); }
+
+5. CSRF Protection: All POST/PUT/DELETE forms must include and validate CSRF tokens.
+   Example: if (!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) { http_response_code(403); exit('Invalid CSRF token'); }
+
+6. Password Security: Always use password_hash() for storage and password_verify() for checking. Never store plain text passwords.
+   Example: $hash = password_hash($password, PASSWORD_BCRYPT);
+            if (password_verify($input_password, $stored_hash)) { /* valid */ }
+
+7. JWT Security: Sign all JWTs with a strong secret key, validate expiration, and use httpOnly cookies for refresh tokens.
+   Example: $jwt = JWT::encode($payload, JWT_SECRET, 'HS256');
+            $decoded = JWT::decode($jwt, new Key(JWT_SECRET, 'HS256'));
+
+8. Session Security: Regenerate session ID on login, use secure and httponly cookie flags.
+   Example: session_regenerate_id(true);
+            ini_set('session.cookie_httponly', 1);
+            ini_set('session.cookie_secure', 1); // in production
+
+---
+
+
+Email Functionality (Optional)
+------------------------------
+
+- Password reset email with token link
+- Welcome email after registration
+- Use PHP mail() or PHPMailer
+- Email template stored in views/emails/
+
+---
+
+
+Error Messages
+--------------
+
+Registration:
+- "Username is required"
+- "Username must be at least 3 characters"
+- "Username already taken"
+- "Email is required"
+- "Invalid email format"
+- "Email already registered"
+- "Password is required"
+- "Password must be at least 6 characters"
+- "Confirm Password is required"
+- "Passwords do not match"
+- "Registration successful! Redirecting..."
+
+Login:
+- "Email is required"
+- "Invalid email format"
+- "Password is required"
+- "Invalid email or password"
+- "Login successful! Redirecting..."
+- "Please verify your email before logging in" (if email verification added)
+
+Forgot Password:
+- "Email is required"
+- "Invalid email format"
+- "If an account exists, a reset link has been sent"
+- "Invalid or expired reset token"
+
+Reset Password:
+- "Password is required"
+- "Password must be at least 6 characters"
+- "Confirm Password is required"
+- "Passwords do not match"
+- "Invalid or expired reset token"
+- "Password reset successful! Redirecting to login..."
+
+---
+
+
+Routes
+------
+
+GET  /login                   -> AuthController@showLogin
+POST /login                   -> AuthController@login
+GET  /register                -> AuthController@showRegister
+POST /register                -> AuthController@register
+GET  /logout                  -> AuthController@logout
+GET  /forgot-password         -> AuthController@showForgotPassword
+POST /forgot-password         -> AuthController@forgotPassword
+GET  /reset-password/{token}  -> AuthController@showResetPassword
+POST /reset-password          -> AuthController@resetPassword
+
+AJAX:
+POST /auth/check-email
+POST /auth/check-username
+
+---
+
+
+Assets Used
+-----------
+
+CSS: assets/css/auth.css
+JS:  assets/js/auth.js
+
+Libraries: jQuery for AJAX validation
+
+---
+
+
+Testing Checklist
+-----------------
+
+- [ ] Valid registration creates user and logs in
+- [ ] Duplicate email shows error
+- [ ] Duplicate username shows error
+- [ ] Password mismatch shows error
+- [ ] Valid login redirects to dashboard
+- [ ] Invalid credentials show error
+- [ ] Logout clears session and redirects to login
+- [ ] Remember me cookie works after closing browser
+- [ ] Forgot password generates valid token
+- [ ] Reset password with valid token works
+- [ ] Reset password with expired token shows error
+- [ ] CSRF token validation works
+- [ ] Session fixation prevented (regenerate on login)

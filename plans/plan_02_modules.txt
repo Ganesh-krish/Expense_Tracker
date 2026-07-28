@@ -1,0 +1,79 @@
+Expense Tracker - Modules Plan
+================================
+
+Core Modules:
+-------------
+
+1. Authentication Module
+   - User Registration
+   - User Login / Logout
+   - Password Reset
+   - Remember Me functionality
+   - Email verification (optional)
+
+2. Dashboard Module
+   - Overview cards (Total Balance, Monthly Income, Monthly Expense, Savings)
+   - Recent transactions list
+   - Monthly expense chart (Bar/Line chart)
+   - Category-wise expense pie chart
+   - Quick add expense/income form
+
+3. Expense Management Module
+   - Add new expense
+   - Edit existing expense
+   - Delete expense
+   - View expense list with filters
+   - Search expenses
+   - Sort by date, amount, category
+   - Upload receipt image
+   - Recurring expenses (optional)
+
+4. Income Management Module
+   - Add new income
+   - Edit existing income
+   - Delete income
+   - View income list with filters
+   - Search income
+   - Sort by date, amount, source
+   - Recurring income (optional)
+
+5. Category Management Module
+   - Create custom categories (Income/Expense)
+   - Edit categories
+   - Delete categories
+   - Set category icons/colors
+   - Default categories on install
+   - Category-wise reports
+
+6. Reports & Analytics Module
+   - Daily/Monthly/Yearly expense report
+   - Daily/Monthly/Yearly income report
+   - Category-wise breakdown
+   - Date range filtering
+   - Export to CSV/PDF
+   - Print friendly view
+   - Comparative reports (This month vs Last month)
+
+7. User Management Module
+   - View profile
+   - Edit profile
+   - Change password
+   - Profile picture upload
+   - Account settings
+
+8. Settings Module
+   - Currency settings
+   - Date format settings
+   - Email notifications toggle
+   - Data backup/export
+   - Clear all data
+
+9. Search & Filter Module
+   - Global search across transactions
+   - Advanced filters (date range, category, amount range)
+   - Save filter presets
+
+10. Budget Management Module (Optional)
+    - Set monthly budget per category
+    - Budget alerts/notifications
+    - Budget vs Actual report

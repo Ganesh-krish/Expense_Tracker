@@ -1,0 +1,317 @@
+Expense Tracker - Module 2: Dashboard Module Plan
+====================================================
+
+Module Name: Dashboard
+File: plan_05_dashboard_module.txt
+
+---
+
+
+Overview
+--------
+Main landing page after login. Provides a quick overview of the user's financial status
+with summary cards, recent transactions, and interactive charts.
+
+---
+
+
+Pages / Views
+-------------
+
+1. Dashboard Page
+   Path: views/dashboard/index.php
+   Sections:
+   - Summary cards row (4 cards)
+   - Quick add expense/income form (modal or inline)
+   - Recent transactions table (last 10)
+   - Expense chart (category-wise for current month)
+   - Income vs Expense chart (last 6 months)
+
+---
+
+
+Controllers
+-----------
+
+1. DashboardController.php
+   Methods:
+   - index() -> load dashboard data, render view
+     Data required:
+     - total_balance
+     - monthly_income
+     - monthly_expense
+     - monthly_savings
+     - recent_transactions (limit 10)
+     - category_expense_data (for pie chart, current month)
+     - monthly_trend_data (for bar/line chart, last 6 months)
+
+---
+
+
+Models Used
+-----------
+
+1. Transaction.php
+   Methods needed:
+   - getTotalBalance($user_id)
+   - getMonthlyIncome($user_id, $month, $year)
+   - getMonthlyExpense($user_id, $month, $year)
+   - getRecentTransactions($user_id, $limit)
+   - getCategoryWiseExpense($user_id, $month, $year)
+   - getMonthlyTrend($user_id, $months)
+
+2. Category.php
+   Methods needed:
+   - getAllByUser($user_id)
+   - getById($user_id, $id)
+
+---
+
+
+Summary Cards Details
+---------------------
+
+Card 1: Total Balance
+   - Label: "Total Balance"
+   - Value: income - expense (all time)
+   - Icon: wallet or balance icon
+   - Color: blue/primary
+   - Format: currency with user's currency setting
+
+Card 2: Monthly Income
+   - Label: "This Month Income"
+   - Value: sum of income transactions for current month
+   - Icon: arrow-down or income icon
+   - Color: green/success
+   - Compare with last month (optional percentage indicator)
+
+Card 3: Monthly Expense
+   - Label: "This Month Expense"
+   - Value: sum of expense transactions for current month
+   - Icon: arrow-up or expense icon
+   - Color: red/danger
+   - Compare with last month (optional percentage indicator)
+
+Card 4: Monthly Savings
+   - Label: "Savings This Month"
+   - Value: income - expense for current month
+   - Icon: piggy-bank or savings icon
+   - Color: purple/info
+   - Show negative in red if expense > income
+
+---
+
+
+Quick Add Form
+--------------
+
+Location: Top right of dashboard or as a floating button/modal
+Fields:
+   - Type: radio buttons (Income / Expense) default Expense
+   - Amount: number input, required
+   - Category: dropdown (loaded via AJAX based on type), required
+   - Date: date input, default today
+   - Description: text input, optional
+   - Submit button
+
+AJAX Behavior:
+- On type change: reload category dropdown with filtered categories
+- On submit: validate and save transaction via AJAX
+- On success: show success message, refresh dashboard data
+- On failure: show error message inline
+
+Validation:
+- Amount: required, numeric, greater than 0
+- Category: required, must belong to user
+- Date: required, valid date format
+
+---
+
+
+Recent Transactions Table
+-------------------------
+
+Columns:
+   - Date
+   - Description
+   - Category (with color dot)
+   - Amount (green for income, red for expense)
+   - Actions: view, edit, delete (icons)
+
+Features:
+   - Show last 10 transactions
+   - Pagination or "View All" link to expenses/income page
+   - Empty state message if no transactions
+   - Quick delete with confirmation
+   - Hover effects
+
+---
+
+
+Charts
+------
+
+1. Expense by Category Chart (Pie/Donut Chart)
+   Library: Chart.js (preferred) or similar
+   Data: category name, amount, color for current month
+   Show legend
+   Click on slice could filter transactions (optional)
+
+2. Income vs Expense Trend Chart (Bar/Line Chart)
+   Library: Chart.js
+   Data: last 6 months labels, income values, expense values
+   Show legend
+   Y-axis: currency amount
+   X-axis: month names
+   Tooltips on hover
+
+---
+
+
+AJAX Endpoints
+--------------
+
+1. POST /dashboard/quick-add-expense
+   Purpose: Add expense from dashboard quick form
+   Request: {amount, category_id, date, description, _token}
+   Response: {success: boolean, message: string, transaction: object}
+
+2. POST /dashboard/quick-add-income
+   Purpose: Add income from dashboard quick form
+   Request: {amount, category_id, date, description, _token}
+   Response: {success: boolean, message: string, transaction: object}
+
+3. GET /dashboard/get-categories
+   Purpose: Get categories filtered by type for quick form
+   Request: ?type=expense or ?type=income
+   Response: {categories: [{id, name, color}]}
+
+4. POST /dashboard/refresh-data
+   Purpose: Refresh dashboard data after adding transaction
+   Request: {_token}
+   Response: {cards: {...}, recent_transactions: [...], charts: {...}}
+
+---
+
+
+Middleware
+----------
+
+- AuthMiddleware: required (only logged in users)
+- RoleMiddleware: not required (all users have same dashboard)
+
+---
+
+
+Assets Used
+-----------
+
+CSS: assets/css/dashboard.css
+JS:  assets/js/dashboard.js
+Libraries: Chart.js (via CDN or vendor), jQuery
+
+---
+
+
+Responsive Behavior
+-------------------
+
+- Cards stack vertically on mobile (1 column)
+- Quick form becomes a modal on mobile
+- Charts resize with container
+- Recent transactions table scrolls horizontally on small screens
+- Sidebar collapses to hamburger menu
+
+---
+
+
+Loading States
+--------------
+
+- Show spinner while fetching dashboard data on page load
+- Show spinner on quick add form submit
+- Show spinner when refreshing charts
+- Disable submit button during AJAX request
+
+---
+
+
+Error Handling
+--------------
+
+- If database error: show generic error message "Unable to load dashboard data"
+- If no transactions: show "No transactions yet" in recent section
+- If no chart data: show "No data available for this month" in charts
+- If AJAX fails: show error and allow retry
+
+---
+
+
+Empty States
+------------
+
+- No transactions: "You have no transactions yet. Start by adding your first income or expense."
+- No categories: "No categories found. Please create categories first."
+- No data for charts: "No data available for the selected period."
+
+---
+
+
+Routes
+------
+
+GET /dashboard                     -> DashboardController@index
+POST /dashboard/quick-add-expense  -> DashboardController@quickAddExpense
+POST /dashboard/quick-add-income   -> DashboardController@quickAddIncome
+GET  /dashboard/get-categories     -> DashboardController@getCategories
+POST /dashboard/refresh-data       -> DashboardController@refreshData
+
+---
+
+
+IMPORTANT: Security Implementation Standards
+==============================================
+
+This module MUST follow these security practices in implementation:
+
+1. Prepared Statements: ALL database queries MUST use PDO prepared statements with bound parameters. Never concatenate user input into SQL queries.
+   Example: $stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = :user_id AND date >= :date_from");
+            $stmt->execute(['user_id' => $user_id, 'date_from' => $date_from]);
+
+2. Input Sanitization: ALL user inputs must be sanitized before validation and database insertion.
+   Example: $amount = filter_input(INPUT_POST, 'amount', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+            $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_SPECIAL_CHARS);
+
+3. Output Escaping: ALL dynamic content rendered in views MUST be escaped using htmlspecialchars() to prevent XSS.
+   Example: echo htmlspecialchars($transaction['description'], ENT_QUOTES, 'UTF-8');
+            echo htmlspecialchars($category['name'], ENT_QUOTES, 'UTF-8');
+
+4. Authorization Checks: Verify the logged-in user owns the resource before any operation.
+   Example: if ((int)$transaction['user_id'] !== (int)$_SESSION['user_id']) { http_response_code(403); exit('Forbidden'); }
+
+5. CSRF Protection: All POST/PUT/DELETE forms must include and validate CSRF tokens.
+   Example: if (!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) { http_response_code(403); exit('Invalid CSRF token'); }
+
+6. File Upload Security: Validate MIME type by extension and content, use random filenames, store outside web root if possible.
+   Example: $allowed = ['jpg','jpeg','png','gif'];
+            $ext = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, $allowed)) { reject; }
+
+---
+
+
+Testing Checklist
+-----------------
+
+- [ ] Dashboard loads after login
+- [ ] All 4 summary cards show correct values
+- [ ] Monthly values compare correctly with last month
+- [ ] Recent transactions show last 10 records
+- [ ] Quick add form submits expense successfully
+- [ ] Quick add form submits income successfully
+- [ ] Category dropdown filters based on selected type
+- [ ] Charts render correctly with data
+- [ ] Dashboard refreshes without page reload after quick add
+- [ ] Empty states display when no data
+- [ ] Responsive layout works on mobile/tablet/desktop
+- [ ] Loading spinners show during data fetch
