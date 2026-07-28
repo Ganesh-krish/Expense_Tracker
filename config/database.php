@@ -9,12 +9,6 @@ define('DB_CHARSET', 'utf8mb4');
 // Base URL
 define('BASE_URL', 'http://localhost/Expense_Tracker/');
 
-// App
-define('APP_NAME', 'Expense Tracker');
-define('JWT_SECRET', getenv('JWT_SECRET') ?: 'change-this-secret-key-in-production');
-define('JWT_EXPIRATION', 3600);
-define('REFRESH_TOKEN_EXPIRATION', 604800);
-
 // Paths
 define('ROOT_PATH', __DIR__ . '/../');
 define('CONTROLLERS_PATH', ROOT_PATH . 'controllers/');

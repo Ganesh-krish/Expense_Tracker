@@ -96,6 +96,7 @@ body.auth-page {
 }
 
 .auth-card {
+    flex: 0 0 auto;
     width: 100%;
     max-width: 420px;
     padding: 2.5rem 2rem;
@@ -236,6 +237,34 @@ body.auth-page {
 .form-check-label {
     color: #333333;
     font-weight: 500;
+}
+
+.alert-success {
+    background: rgba(229, 9, 20, 0.08);
+    border-color: #E50914;
+    color: #000000;
+}
+
+.alert-success i, .text-success i {
+    color: #198754;
+}
+
+.alert-danger {
+    background: rgba(229, 9, 20, 0.1);
+    border-color: #E50914;
+    color: #000000;
+}
+
+.alert-danger i, .text-danger i {
+    color: #E50914;
+}
+
+.text-warning i {
+    color: #f59f00;
+}
+
+.text-info i {
+    color: #0dcaf0;
 }
 
 @media (max-width: 768px) {

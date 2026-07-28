@@ -67,4 +67,13 @@ class User extends BaseModel {
         }
         return false;
     }
+
+    public function getLastPasswordResetAt($email) {
+        $stmt = $this->pdo->prepare("
+            SELECT MAX(created_at) FROM " . TABLE_PASSWORD_RESETS . " WHERE email = :email
+        ");
+        $stmt->execute(['email' => $email]);
+        $last = $stmt->fetchColumn();
+        return $last ?: null;
+    }
 }

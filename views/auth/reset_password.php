@@ -1,27 +1,29 @@
 <?php require_once VIEWS_PATH . 'auth/header.php'; ?>
 
-<?php if (isset($_SESSION['flash_success'])): ?>
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <?php echo htmlspecialchars($_SESSION['flash_success']); unset($_SESSION['flash_success']); ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-<?php endif; ?>
-
-<?php if (isset($_SESSION['flash_error'])): ?>
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <?php echo htmlspecialchars($_SESSION['flash_error']); unset($_SESSION['flash_error']); ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-<?php endif; ?>
-
 <div class="auth-body">
+    <?php if (isset($_SESSION['flash_success'])): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-1"></i>
+            <?php echo htmlspecialchars($_SESSION['flash_success']); unset($_SESSION['flash_success']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <?php if (isset($_SESSION['flash_error'])): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-x-circle-fill me-1"></i>
+            <?php echo htmlspecialchars($_SESSION['flash_error']); unset($_SESSION['flash_error']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
     <h5 class="mb-3">Reset Password</h5>
     <?php if (isset($errors) && !empty($errors)): ?>
         <?php foreach ($errors as $error): ?>
-            <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
+            <div class="alert alert-danger"><i class="bi bi-x-circle-fill me-1"></i><?php echo htmlspecialchars($error); ?></div>
         <?php endforeach; ?>
     <?php endif; ?>
-    <form method="POST" action="<?php echo BASE_URL; ?>reset-password" id="reset-password-form">
+    <form method="POST" action="<?php echo BASE_URL; ?>reset-password" id="reset-password-form" novalidate>
         <input type="hidden" name="csrf_token" value="<?php echo csrfToken(); ?>">
         <input type="hidden" name="token" value="<?php echo htmlspecialchars($token ?? ''); ?>">
         <div class="mb-3">

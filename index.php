@@ -30,7 +30,7 @@ foreach ($routes as $routePattern => $target) {
         continue;
     }
 
-    $regex = '#^' . preg_replace('/\{[^}]+\}/', '[^/]+', $routePath) . '$#';
+    $regex = '#^' . preg_replace('/\{([^}]+)\}/', '([^/]+)', $routePath) . '$#';
     if (preg_match($regex, $url, $matches)) {
         [$controllerName, $action] = explode('@', $target);
         $controllerFile = CONTROLLERS_PATH . $controllerName . '.php';

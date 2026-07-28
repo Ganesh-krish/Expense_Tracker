@@ -1,6 +1,5 @@
 // Auth.js
 $(document).ready(function() {
-    // Login form validation
     $('#login-form').on('submit', function(e) {
         var email = $('#email').val().trim();
         var password = $('#password').val().trim();
@@ -26,7 +25,6 @@ $(document).ready(function() {
         }
     });
 
-    // Register form validation
     $('#register-form').on('submit', function(e) {
         var username = $('#username').val().trim();
         var email = $('#email').val().trim();
@@ -69,7 +67,6 @@ $(document).ready(function() {
         }
     });
 
-    // Forgot password form validation
     $('#forgot-password-form').on('submit', function(e) {
         var email = $('#email').val().trim();
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -79,7 +76,6 @@ $(document).ready(function() {
         }
     });
 
-    // Reset password form validation
     $('#reset-password-form').on('submit', function(e) {
         var password = $('#password').val().trim();
         var confirmPassword = $('#confirm_password').val().trim();
@@ -105,7 +101,6 @@ $(document).ready(function() {
         }
     });
 
-    // Check email availability
     $('#email').on('blur', function() {
         var email = $(this).val();
         if (email) {
@@ -117,7 +112,6 @@ $(document).ready(function() {
         }
     });
 
-    // Check username availability
     $('#username').on('blur', function() {
         var username = $(this).val();
         if (username) {

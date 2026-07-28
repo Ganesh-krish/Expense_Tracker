@@ -6,7 +6,7 @@
     <title><?php echo isset($pageTitle) ? $pageTitle . ' - ' . APP_NAME : APP_NAME; ?></title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/auth.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/auth.css?v=2">
     <?php if (isset($extraCss)) echo $extraCss; ?>
 </head>
 <body class="auth-page">
