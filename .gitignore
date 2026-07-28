@@ -43,7 +43,6 @@ temp/
 *.backup
 
 # Database
-*.sql
 *.sqlite
 
 # Session files
