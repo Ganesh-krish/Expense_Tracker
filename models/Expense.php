@@ -24,7 +24,7 @@ class Expense extends BaseModel {
         return $this->delete($id, $userId);
     }
     
-    public function findById($id, $userId) {
+    public function findById($id, $userId = null) {
         $stmt = $this->pdo->prepare("SELECT * FROM " . TABLE_TRANSACTIONS . " WHERE id = :id AND user_id = :user_id AND type = :type");
         $stmt->execute([
             'id' => $id,

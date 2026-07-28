@@ -1,7 +1,10 @@
 <?php
-require_once 'config.php';
-require_once 'constants.php';
-require_once 'database.php';
+if (!defined('ROOT_PATH')) {
+    require_once __DIR__ . '/../config/database.php';
+}
+if (!defined('TABLE_USERS')) {
+    require_once __DIR__ . '/../config/constants.php';
+}
 
 // Helper Functions
 
@@ -81,7 +84,7 @@ function getFlashMessage($key) {
 
 function generateJwt($userId, $email, $role) {
     require_once ASSETS_PATH . 'vendor/jwt/autoload.php';
-    $key = getenv('JWT_SECRET') ?: 'your-secret-key';
+    $key = JWT_SECRET;
     $payload = [
         'sub' => $userId,
         'email' => $email,
@@ -95,7 +98,7 @@ function generateJwt($userId, $email, $role) {
 function validateJwt($token) {
     require_once ASSETS_PATH . 'vendor/jwt/autoload.php';
     try {
-        $key = getenv('JWT_SECRET') ?: 'your-secret-key';
+        $key = JWT_SECRET;
         $decoded = \Firebase\JWT\JWT::decode($token, new \Firebase\JWT\Key($key, 'HS256'));
         return (array)$decoded;
     } catch (\Exception $e) {

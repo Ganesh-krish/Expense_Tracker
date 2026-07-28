@@ -1,105 +1,127 @@
 // Auth.js
 $(document).ready(function() {
     // Login form validation
-    $('#login-form').submit(function(e) {
-        e.preventDefault();
-        
-        var email = $('#email').val();
-        var password = $('#password').val();
-        
-        if (!email || !password) {
-            alert('Please fill all fields');
-            return;
+    $('#login-form').on('submit', function(e) {
+        var email = $('#email').val().trim();
+        var password = $('#password').val().trim();
+        var isValid = true;
+
+        if (!email) {
+            alert('Please enter your email');
+            $('#email').focus();
+            isValid = false;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            alert('Please enter a valid email address');
+            isValid = false;
         }
-        
-        $.post('<?php echo BASE_URL; ?>login', $(this).serialize(), function(response) {
-            if (response.success) {
-                window.location.href = '<?php echo BASE_URL; ?>dashboard';
-            } else {
-                alert(response.message || 'Login failed');
-            }
-        }).fail(function() {
-            alert('Login failed. Please try again.');
-        });
+
+        if (!password) {
+            alert('Please enter your password');
+            $('#password').focus();
+            isValid = false;
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+        }
     });
-    
+
     // Register form validation
-    $('#register-form').submit(function(e) {
-        e.preventDefault();
-        
-        var password = $('#password').val();
-        var confirmPassword = $('#confirm_password').val();
-        
-        if (password !== confirmPassword) {
-            alert('Passwords do not match');
-            return;
+    $('#register-form').on('submit', function(e) {
+        var username = $('#username').val().trim();
+        var email = $('#email').val().trim();
+        var password = $('#password').val().trim();
+        var confirmPassword = $('#confirm_password').val().trim();
+        var isValid = true;
+
+        if (!username || username.length < 3) {
+            alert('Username must be at least 3 characters');
+            $('#username').focus();
+            isValid = false;
         }
-        
-        if (password.length < 6) {
+
+        if (!email) {
+            alert('Please enter your email');
+            $('#email').focus();
+            isValid = false;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            alert('Please enter a valid email address');
+            isValid = false;
+        }
+
+        if (!password) {
+            alert('Please enter a password');
+            $('#password').focus();
+            isValid = false;
+        } else if (password.length < 6) {
             alert('Password must be at least 6 characters');
-            return;
+            isValid = false;
         }
-        
-        $.post('<?php echo BASE_URL; ?>register', $(this).serialize(), function(response) {
-            if (response.success) {
-                window.location.href = '<?php echo BASE_URL; ?>dashboard';
-            } else {
-                alert(response.message || 'Registration failed');
-            }
-        }).fail(function() {
-            alert('Registration failed. Please try again.');
-        });
-    });
-    
-    // Forgot password form
-    $('#forgot-password-form').submit(function(e) {
-        e.preventDefault();
-        $.post('<?php echo BASE_URL; ?>forgot-password', $(this).serialize(), function(response) {
-            alert(response.message);
-            if (response.success) {
-                window.location.href = '<?php echo BASE_URL; ?>login';
-            }
-        });
-    });
-    
-    // Reset password form
-    $('#reset-password-form').submit(function(e) {
-        e.preventDefault();
-        
-        var password = $('#password').val();
-        var confirmPassword = $('#confirm_password').val();
-        
+
         if (password !== confirmPassword) {
             alert('Passwords do not match');
-            return;
+            $('#confirm_password').focus();
+            isValid = false;
         }
-        
-        $.post('<?php echo BASE_URL; ?>reset-password', $(this).serialize(), function(response) {
-            if (response.success) {
-                window.location.href = '<?php echo BASE_URL; ?>login';
-            } else {
-                alert(response.message);
-            }
-        });
+
+        if (!isValid) {
+            e.preventDefault();
+        }
     });
-    
+
+    // Forgot password form validation
+    $('#forgot-password-form').on('submit', function(e) {
+        var email = $('#email').val().trim();
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            alert('Please enter a valid email address');
+            e.preventDefault();
+            $('#email').focus();
+        }
+    });
+
+    // Reset password form validation
+    $('#reset-password-form').on('submit', function(e) {
+        var password = $('#password').val().trim();
+        var confirmPassword = $('#confirm_password').val().trim();
+        var isValid = true;
+
+        if (!password) {
+            alert('Please enter a password');
+            $('#password').focus();
+            isValid = false;
+        } else if (password.length < 6) {
+            alert('Password must be at least 6 characters');
+            isValid = false;
+        }
+
+        if (password !== confirmPassword) {
+            alert('Passwords do not match');
+            $('#confirm_password').focus();
+            isValid = false;
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+        }
+    });
+
     // Check email availability
     $('#email').on('blur', function() {
         var email = $(this).val();
         if (email) {
-            $.post('<?php echo BASE_URL; ?>auth/check-email', { email: email }, function(response) {
+            $.post('<?php echo BASE_URL; ?>auth/check-email', { email: email, csrf_token: '<?php echo csrfToken(); ?>' }, function(response) {
                 if (response.exists) {
                     alert('Email already registered');
                 }
             });
         }
     });
-    
+
     // Check username availability
     $('#username').on('blur', function() {
         var username = $(this).val();
         if (username) {
-            $.post('<?php echo BASE_URL; ?>auth/check-username', { username: username }, function(response) {
+            $.post('<?php echo BASE_URL; ?>auth/check-username', { username: username, csrf_token: '<?php echo csrfToken(); ?>' }, function(response) {
                 if (response.exists) {
                     alert('Username already taken');
                 }

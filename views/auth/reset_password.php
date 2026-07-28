@@ -1,32 +1,32 @@
-<?php $layout = 'form-brand'; ?>
 <?php require_once VIEWS_PATH . 'auth/header.php'; ?>
 
+<?php if (isset($_SESSION['flash_success'])): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <?php echo htmlspecialchars($_SESSION['flash_success']); unset($_SESSION['flash_success']); ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['flash_error'])): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <?php echo htmlspecialchars($_SESSION['flash_error']); unset($_SESSION['flash_error']); ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
 <div class="auth-body">
+    <h5 class="mb-3">Reset Password</h5>
     <?php if (isset($errors) && !empty($errors)): ?>
         <?php foreach ($errors as $error): ?>
             <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
         <?php endforeach; ?>
     <?php endif; ?>
-    <h5 class="mb-3">Create an account</h5>
-    <form method="POST" action="<?php echo BASE_URL; ?>register" id="register-form">
+    <form method="POST" action="<?php echo BASE_URL; ?>reset-password" id="reset-password-form">
         <input type="hidden" name="csrf_token" value="<?php echo csrfToken(); ?>">
-        <div class="mb-3">
-            <label for="username" class="form-label">
-                <i class="bi bi-person label-icon"></i> Username
-            </label>
-            <input type="text" class="form-control" id="username" name="username" placeholder="johndoe" required
-                   value="<?php echo htmlspecialchars($username ?? ''); ?>">
-        </div>
-        <div class="mb-3">
-            <label for="email" class="form-label">
-                <i class="bi bi-envelope label-icon"></i> Email
-            </label>
-            <input type="email" class="form-control" id="email" name="email" placeholder="you@example.com" required
-                   value="<?php echo htmlspecialchars($email ?? ''); ?>">
-        </div>
+        <input type="hidden" name="token" value="<?php echo htmlspecialchars($token ?? ''); ?>">
         <div class="mb-3">
             <label for="password" class="form-label">
-                <i class="bi bi-lock label-icon"></i> Password
+                <i class="bi bi-lock label-icon"></i> New Password
             </label>
             <input type="password" class="form-control" id="password" name="password" placeholder="Min 6 characters" required minlength="<?php echo PASSWORD_MIN_LENGTH; ?>">
         </div>
@@ -36,10 +36,10 @@
             </label>
             <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Re-enter password" required>
         </div>
-        <button type="submit" class="btn btn-primary w-100">Register</button>
+        <button type="submit" class="btn btn-primary w-100">Reset Password</button>
     </form>
     <div class="mt-3 text-center">
-        <p>Already have an account? <a href="<?php echo BASE_URL; ?>login">Login</a></p>
+        <p>Remember your password? <a href="<?php echo BASE_URL; ?>login">Login</a></p>
     </div>
 </div>
 

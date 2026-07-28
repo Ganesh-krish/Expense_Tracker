@@ -10,6 +10,8 @@ $routes = [
     'POST:forgot-password' => 'AuthController@forgotPassword',
     'GET:reset-password' => 'AuthController@showResetPassword',
     'POST:reset-password' => 'AuthController@resetPassword',
+    'POST:auth/check-email' => 'AuthController@checkEmail',
+    'POST:auth/check-username' => 'AuthController@checkUsername',
     
     // Dashboard
     'GET:dashboard' => 'DashboardController@index',

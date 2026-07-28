@@ -33,16 +33,16 @@ class Category extends BaseModel {
         return $this->findAll(['is_default' => STATUS_ACTIVE, 'user_id' => null], 'name ASC');
     }
     
-    public function create($userId, $data) {
+    public function createCategory($userId, $data) {
         $data['user_id'] = $userId;
         return parent::create($data);
     }
     
-    public function update($id, $userId, $data) {
+    public function updateCategory($id, $userId, $data) {
         return parent::update($id, $data, $userId);
     }
     
-    public function delete($id, $userId) {
+    public function deleteCategory($id, $userId) {
         return parent::delete($id, $userId);
     }
 }
