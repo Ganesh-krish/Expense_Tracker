@@ -22,14 +22,14 @@
         <input type="hidden" name="csrf_token" value="<?php echo csrfToken(); ?>">
         <div class="mb-3">
             <label for="email" class="form-label">
-                <i class="bi bi-envelope label-icon"></i> Email
+                <span class="label-icon-box"><i class="bi bi-envelope label-icon"></i></span> Email
             </label>
             <input type="email" class="form-control" id="email" name="email" placeholder="you@example.com" required autofocus
                    value="<?php echo htmlspecialchars($email ?? ''); ?>">
         </div>
         <div class="mb-3">
             <label for="password" class="form-label">
-                <i class="bi bi-lock label-icon"></i> Password
+                <span class="label-icon-box"><i class="bi bi-lock label-icon"></i></span> Password
             </label>
             <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
         </div>
