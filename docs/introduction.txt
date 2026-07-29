@@ -1,0 +1,10 @@
+EXPENSE TRACKER
+PROJECT INTRODUCTION
+
+The Expense Tracker is a web-based personal finance management application designed to help individuals and households monitor, record, and analyze their daily income and expenses. In today's fast-paced lifestyle, managing personal finances has become increasingly challenging, and many people struggle to keep track of their spending habits using traditional methods such as notebooks or spreadsheets. These approaches are often manual, error-prone, and lack real-time insights into financial health.
+
+This project addresses these challenges by providing an automated digital solution that simplifies the process of recording transactions, visualizing spending patterns, and maintaining budgets. The application is built using PHP 8.x and MySQL with a Model-View-Controller (MVC) architecture, ensuring scalability, maintainability, and security. The frontend uses Bootstrap 5.3 for responsive design, making the system accessible on both desktop and mobile devices.
+
+Key features include secure user authentication with password reset, income and expense tracking with category-based organization, budget management with progress monitoring, interactive reports with CSV and PDF export, receipt image uploads, recurring transaction support, and advanced search capabilities. Security is enforced through CSRF protection, bcrypt password hashing, prepared statements, and HTTP-only session cookies.
+
+The Expense Tracker empowers users to gain clear visibility into their spending habits, set realistic budgets, and make informed financial decisions. The modular architecture allows for future enhancements such as mobile applications, bank integration, and advanced analytics, making it a comprehensive and extensible tool for personal financial management.
